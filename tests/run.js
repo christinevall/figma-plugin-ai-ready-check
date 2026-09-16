@@ -160,6 +160,15 @@ function paintBound(hex, v) { return solid(hex, { boundVariables: { color: bound
     t('missing docs link flagged on set, present on Badge passes', check(r, 'components', 'docs-link').items.some(i => i.id === set.id) && !check(r, 'components', 'docs-link').items.some(i => i.id === badge.id));
     t('hidden layer inside a component is flagged', check(r, 'components', 'hidden').items.some(i => i.name === 'leftover'));
     t('layer hidden by a boolean property (onDismiss) is not flagged', !check(r, 'components', 'hidden').items.some(i => i.name === 'dismiss' || i.name === 'close icon'));
+    // variant-driven states: placeholder shown in one variant, value in the other; a leftover hidden in both
+    const inp = add(f.page, node('COMPONENT_SET', 'TextField', { componentPropertyDefinitions: { state: { type: 'VARIANT', variantOptions: ['empty', 'filled'] } }, description: 'Text field for a single value. Use in forms. Not for search, use SearchField.' }));
+    const e = add(inp, node('COMPONENT', 'state=empty', { layoutMode: 'HORIZONTAL' })); add(e, node('TEXT', 'placeholder')); add(e, node('TEXT', 'value', { visible: false })); add(e, node('RECTANGLE', 'old bg', { visible: false }));
+    const fl = add(inp, node('COMPONENT', 'state=filled', { layoutMode: 'HORIZONTAL' })); add(fl, node('TEXT', 'placeholder', { visible: false })); add(fl, node('TEXT', 'value')); add(fl, node('RECTANGLE', 'old bg', { visible: false }));
+    f.select(set, badge, card, inp);
+    const r3 = await audit(f);
+    const hid = check(r3, 'components', 'hidden').items.map(i => i.name);
+    t('layers hidden in one variant but shown in another (placeholder/value) are not flagged', hid.indexOf('placeholder') < 0 && hid.indexOf('value') < 0, JSON.stringify(hid));
+    t('a layer hidden in every variant is still flagged', hid.indexOf('old bg') >= 0);
     t('component without auto-layout (2 children) is flagged', check(r, 'components', 'comp-layout').items.some(i => i.id === card.id));
     const icon = add(f.page, node('COMPONENT', 'icon/alert-octagon', { layoutMode: 'NONE', description: 'Alert icon. Use in banners and toasts.' })); add(icon, node('VECTOR', 'Vector')); add(icon, node('VECTOR', 'Vector'));
     const illo = add(f.page, node('FRAME', 'Illustration / Empty state', { layoutMode: 'NONE' })); add(illo, node('ELLIPSE', 'Ellipse 1')); add(illo, node('BOOLEAN_OPERATION', 'Union')); const g = add(illo, node('GROUP', 'Group 3')); add(g, node('VECTOR', 'Vector'));
