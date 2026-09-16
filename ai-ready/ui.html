@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --paper: #f8f6f1; --card: #ffffff; --ink: #292929; --ink-soft: #3c3c47; --muted: #6a6a76;
+    --line: #e7e4dc; --line-2: #efece4; --accent: #FF642F; --accent-ink: #1b1b1b; --accent-text: #b04912;
+    --crit: #b3341f; --warn: #8a5a00; --info: #6a6a76; --good: #2f7d52; --good-bg: #e9f3ec; --track: #ece8df;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif; background: var(--paper); color: var(--ink); font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; cursor: pointer; color: inherit; }
+  input, textarea, select { font: inherit; color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  a.ext, .ext { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  a.ext:hover, .ext:hover { color: var(--accent-text); }
+  .lead { font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 18px 0 9px; font-weight: 500; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; background: var(--line-2); padding: 1px 4px; border-radius: 4px; }
+
+  /* top */
+  .top { padding: 14px 18px 12px; flex: none; }
+  .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+  .logo { width: 22px; height: auto; flex: none; display: block; }
+  .brand h1 { font-size: 14px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+  .brand p { margin: 0; color: var(--muted); font-size: 11px; }
+  .byml { margin: 2px 0 0; font-size: 10.5px; color: var(--muted); }
+  .runrow { display: flex; gap: 8px; margin-top: 10px; }
+  .scope { display: flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; flex: 1; }
+  .scope button { flex: 1; border: 0; background: var(--card); color: var(--muted); font-size: 11.5px; padding: 8px 2px; border-right: 1px solid var(--line); }
+  .scope button:last-child { border-right: 0; }
+  .scope button[aria-pressed="true"] { background: var(--ink); color: var(--paper); font-weight: 600; }
+  .run { border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 12.5px; padding: 8px 14px; border-radius: 9px; white-space: nowrap; }
+  .run:hover { filter: brightness(1.05); }
+  .run:disabled { opacity: .6; }
+
+  .beta { display: inline-flex; align-items: center; border: 1px solid #f1d9a6; background: #fff7e6; color: #8a5a00; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; cursor: pointer; }
+  .beta:hover, .beta[aria-expanded="true"] { background: #8a5a00; color: #fff; border-color: #8a5a00; }
+  /* warning banner */
+  .warn-banner { display: none; margin: 10px 0 0; padding: 9px 12px; border: 1px solid #f1d9a6; background: #fff7e6; border-radius: 9px; font-size: 11.5px; line-height: 1.45; color: #5a4300; gap: 10px; align-items: flex-start; }
+  .warn-banner.show { display: flex; }
+  .warn-banner b { font-weight: 600; }
+  .warn-banner .txt { flex: 1; }
+  .warn-banner button { border: 0; background: transparent; color: #8a5a00; font-size: 11.5px; font-weight: 600; padding: 0; white-space: nowrap; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* stepper */
+  .stepper { display: none; padding: 0 8px; border-bottom: 1px solid var(--line); flex: none; gap: 2px; }
+  .stepper.show { display: flex; }
+  .stepper button { flex: 1; border: 0; background: transparent; padding: 8px 2px 7px; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); min-width: 0; }
+  .stepper button .num { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .stepper button .lbl { font-size: 8.5px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .stepper button[aria-current="step"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .stepper button[aria-current="step"] .num { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .stepper button .num.g { border-color: var(--good); color: var(--good); }
+  .stepper button .num.y { border-color: var(--warn); color: var(--warn); }
+  .stepper button .num.r { border-color: var(--crit); color: var(--crit); }
+  .stepper button[aria-current="step"] .num.g, .stepper button[aria-current="step"] .num.y, .stepper button[aria-current="step"] .num.r { color: var(--paper); }
+
+  .scroll { flex: 1; overflow-y: auto; padding: 4px 18px 20px; }
+  .panel { display: none; }
+  .panel.show { display: block; }
+
+  /* bottom nav */
+  .nav { display: none; flex: none; border-top: 1px solid var(--line); background: var(--card); padding: 9px 12px 9px 12px; align-items: center; gap: 8px; }
+  .nav.show { display: flex; }
+  .nav button { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+  .nav button:hover { border-color: var(--ink); }
+  .nav button:disabled { opacity: .35; }
+  .nav button.next { background: var(--ink); color: var(--paper); border-color: var(--ink); margin-left: auto; }
+  .nav .pos { font-size: 11px; color: var(--muted); }
+  .nav .pos b { color: var(--ink-soft); font-weight: 600; }
+  .micro { color: var(--muted); font-size: 10px; text-align: center; padding: 6px 12px 22px; }
+  .micro .ext { font-size: 10px; }
+
+  /* step header */
+  .step-h { padding: 14px 0 6px; }
+  .step-h h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+  .step-h p { margin: 0; color: var(--ink-soft); font-size: 12.5px; line-height: 1.5; }
+  .step-h .note { margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .chip { font-size: 10.5px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--line); color: var(--ink-soft); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .chip.g { border-color: var(--good); color: var(--good); } .chip.y { border-color: var(--warn); color: var(--warn); } .chip.r { border-color: var(--crit); color: var(--crit); }
+
+  /* explainer */
+  .why { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 0 12px; margin: 10px 0 6px; }
+  .why summary { cursor: pointer; list-style: none; padding: 10px 0; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .why summary::-webkit-details-marker { display: none; }
+  .why summary::before { content: '›'; color: var(--muted); transition: transform .15s; display: inline-block; }
+  .why[open] summary::before { transform: rotate(90deg); }
+  .why .body { padding: 0 0 12px; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .why .body p { margin: 0 0 8px; } .why .body p:last-child { margin-bottom: 0; }
+  .why .body b { color: var(--ink); }
+  .why pre { background: #1d1d2b; color: #f4f3ef; border-radius: 7px; padding: 9px 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; line-height: 1.5; overflow-x: auto; margin: 6px 0 8px; white-space: pre; }
+  .why ol { margin: 0 0 6px; padding-left: 18px; } .why li { margin-bottom: 4px; }
+
+  /* checks */
+  .check { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; background: var(--card); overflow: hidden; }
+  .check.ok { background: var(--paper); }
+  .chead { display: flex; align-items: center; gap: 10px; width: 100%; background: transparent; border: 0; text-align: left; padding: 10px 12px; }
+  .chead:hover { background: var(--line-2); }
+  .chead .d { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .chead .gi { flex: 1; min-width: 0; }
+  .chead .gi b { font-size: 12.5px; font-weight: 600; display: block; }
+  .chead .gi .sev { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .chead .cnt { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .chead .cnt b { color: var(--ink); font-weight: 600; }
+  .chead .chev { color: var(--muted); transition: transform .15s; }
+  .check[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  .cbody { display: none; padding: 0 12px 12px; }
+  .check[aria-expanded="true"] .cbody { display: block; }
+  .fix { font-size: 12px; color: var(--ink-soft); margin: 2px 0 8px; }
+  .fix b { color: var(--ink); font-weight: 600; }
+  .help { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 700; cursor: pointer; vertical-align: middle; margin-left: 5px; flex: none; background: transparent; padding: 0; }
+  .help:hover, .help[aria-expanded="true"] { border-color: var(--accent); color: var(--accent-text); }
+  .why-inline { font-size: 11.5px; color: var(--muted); background: var(--paper); border: 1px solid var(--line-2); border-radius: 7px; padding: 8px 10px; margin: 7px 0 10px; line-height: 1.45; }
+  .why-inline b { color: var(--ink-soft); font-weight: 600; }
+  .batch { display: flex; gap: 7px; flex-wrap: wrap; margin: 0 0 10px; }
+  .btn { border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); font-size: 11.5px; padding: 6px 10px; border-radius: 7px; white-space: nowrap; }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.05); }
+  .btn.quiet { border-color: transparent; color: var(--muted); padding-left: 4px; padding-right: 4px; }
+  .btn.quiet:hover { color: var(--accent-text); border-color: transparent; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.done { background: var(--good-bg); border-color: var(--good-bg); color: var(--good); font-weight: 600; }
+
+  /* rows */
+  .rows { display: flex; flex-direction: column; }
+  .row { padding: 8px 0; border-top: 1px solid var(--line-2); }
+  .row.done { opacity: .55; }
+  .row .r1 { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .row .nm { flex: 1; min-width: 0; font-size: 12px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .nm small { color: var(--muted); font-size: 10.5px; margin-left: 5px; }
+  .row .r2 { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .row .val { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); vertical-align: -2px; margin-right: 4px; }
+  .row input[type=text], .row input[type=url], .row select { flex: 1; min-width: 80px; background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; font-size: 11.5px; }
+  .row select { max-width: 100%; }
+  .row textarea { width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; font-size: 12px; resize: vertical; min-height: 44px; }
+  .row .err { color: var(--crit); font-size: 11px; margin-top: 4px; }
+  .row .hint { font-size: 11px; color: var(--muted); }
+  .tagchip { font-size: 10px; padding: 1px 6px; border-radius: 4px; background: var(--line-2); color: var(--ink-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .more { font-size: 11px; color: var(--muted); padding: 6px 0 0; }
+
+  /* overview */
+  .score-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 13px; margin-top: 12px; }
+  .ring { position: relative; width: 78px; height: 78px; flex: none; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .num b { font-size: 23px; font-weight: 600; line-height: 1; }
+  .ring .num small { font-size: 9px; color: var(--muted); letter-spacing: .05em; }
+  .score-meta h2 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+  .score-meta p { margin: 0; color: var(--muted); font-size: 11.5px; }
+  .pills { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .pill { font-size: 10.5px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--line); display: inline-flex; align-items: center; gap: 5px; color: var(--ink-soft); }
+  .pill .d { width: 7px; height: 7px; border-radius: 50%; }
+  .action { display: flex; gap: 11px; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid var(--line-2); }
+  .action:last-child { border-bottom: 0; }
+  .action .n { width: 19px; height: 19px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent-text); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; flex: none; margin-top: 1px; }
+  .action .b { flex: 1; min-width: 0; }
+  .action .b b { font-size: 13px; font-weight: 600; display: block; }
+  .action .b span { font-size: 11.5px; color: var(--muted); }
+  .action .do { border: 0; background: transparent; color: var(--accent-text); font-weight: 600; font-size: 11.5px; padding: 2px 0; align-self: center; white-space: nowrap; }
+  .action .do:hover { text-decoration: underline; }
+  .cat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; margin-bottom: 8px; cursor: pointer; }
+  .cat:hover { border-color: var(--ink); }
+  .cat-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .cat-top b { font-size: 13px; font-weight: 600; }
+  .cat-top .val { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cat-top .val small { color: var(--muted); font-weight: 400; }
+  .cat .hint { color: var(--muted); font-size: 11px; margin: 3px 0 8px; }
+  .bar { height: 6px; background: var(--track); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
+
+  /* selection card */
+  .sel-add { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 12px; margin: 8px 0 10px; }
+  .sel-add .k { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .sel-add h4 { margin: 4px 0 2px; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sel-add .sub { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+  .sel-add .sub b { color: var(--ink-soft); font-weight: 600; }
+  .mirror { background: var(--paper); border: 1px solid var(--line-2); border-radius: 7px; padding: 8px 10px; margin: 2px 0 10px; }
+  .mirror .ml { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .mirror p { margin: 3px 0 0; font-size: 11.5px; color: var(--muted); font-style: italic; }
+  .field { margin-bottom: 8px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .field textarea, .field input { width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; font-size: 12px; }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .dactions { display: flex; gap: 7px; align-items: center; }
+  .scaffold { margin: 4px 0 6px; }
+  .scaffold summary { cursor: pointer; list-style: none; font-size: 11px; color: var(--muted); padding: 3px 0; }
+  .scaffold summary::-webkit-details-marker { display: none; }
+  .scaffold summary::before { content: '›'; color: var(--muted); display: inline-block; margin-right: 5px; }
+  .scaffold[open] summary::before { transform: rotate(90deg); }
+  .scaffold pre { background: #1d1d2b; color: #f4f3ef; border-radius: 7px; padding: 9px 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; overflow-x: auto; margin: 5px 0 0; }
+
+  /* checklist */
+  .cl-sec { margin-bottom: 14px; }
+  .cl-sec h3 { font-size: 12.5px; font-weight: 600; margin: 0 0 4px; }
+  .cl { display: flex; align-items: flex-start; gap: 9px; padding: 8px 0; border-top: 1px solid var(--line-2); }
+  .cl input { margin: 3px 0 0; width: 15px; height: 15px; accent-color: var(--good); flex: none; cursor: pointer; }
+  .cl label { flex: 1; font-size: 12px; color: var(--ink); cursor: pointer; line-height: 1.45; }
+  .cl.on label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
+  .cl .by { display: block; font-size: 10px; color: var(--muted); }
+  .progress { margin: 10px 0 6px; }
+  .progress .pbar { height: 6px; background: var(--track); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .progress .pbar i { display: block; height: 100%; background: var(--good); border-radius: 3px; transition: width .3s; }
+  .progress p { margin: 6px 0 0; font-size: 11.5px; color: var(--muted); }
+
+  /* report */
+  .report { width: 100%; height: 260px; background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; line-height: 1.45; resize: vertical; white-space: pre; }
+
+  .empty { text-align: center; color: var(--muted); padding: 22px 12px; font-size: 12px; }
+  .empty.win { color: var(--good); }
+  .hero { color: var(--ink-soft); font-size: 12.5px; line-height: 1.6; padding: 12px 0 4px; }
+  .hero b { color: var(--ink); }
+  .hero ol { margin: 8px 0 0; padding-left: 18px; } .hero li { margin-bottom: 5px; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--accent-ink); border-top-color: transparent; border-radius: 50%; animation: r .7s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes r { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } * { transition: none !important; } }
+  .grip { position: fixed; right: 0; bottom: 0; width: 28px; height: 28px; cursor: nwse-resize; z-index: 9; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .grip svg { position: absolute; right: 5px; bottom: 5px; pointer-events: none; }
+  .grip:hover svg path { stroke: #16161d; }
+  .sizebtn { position: absolute; right: 14px; top: 12px; border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 7px; width: 26px; height: 26px; padding: 0; font-size: 13px; line-height: 1; }
+  .sizebtn:hover { color: var(--ink); border-color: var(--ink); }
+  .top { position: relative; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <button class="sizebtn" id="sizebtn" title="Toggle window size" aria-label="Toggle window size">⤢</button>
+    <div class="brand">
+      <svg class="logo" width="22" height="15" viewBox="0 0 335 229" aria-hidden="true"><path d="M165.576 37.3072C180.771 6.91654 217.975 0 249.575 0C300.759 0 334.14 36.4962 334.14 92.1307V228.769H267.378V97.9167C267.378 75.6629 256.696 61.4204 235.333 61.4204C213.079 61.4204 200.617 76.9981 200.617 103.258V228.769H133.855L133.523 103.258C133.523 76.9982 121.061 61.4205 98.8068 61.4205C77.4432 61.4205 66.7614 75.6629 66.7614 97.9167V228.769H0V92.1307C0 36.4963 33.3807 0 84.5644 0C116.165 0 150.381 6.91654 165.576 37.3072Z" fill="#171A25"/></svg>
+      <div><h1>AI Ready Check <button type="button" class="beta" id="beta-pill" aria-expanded="false" aria-controls="warn" title="About the beta">Beta</button></h1><p>Check and fix your Figma file for AI agents, MCP and dev handoff</p>
+        <p class="byml">by Christine Vallaure · <a class="ext" href="#" data-extlink="https://moonlearning.io">moonlearning.io</a></p></div>
+    </div>
+    <div class="warn-banner" id="warn" role="note"><span class="txt"><b>This is a beta.</b> Try it on a copy of your file first. Every fix is one click and one Cmd+Z, but “Apply to all” changes many things at once. The checks are heuristics, not a verdict, and some may be wrong. Checks, names and wording can still change before the Community release; your checklist ticks stay in the file. Wrong result, a bug, or an idea? Mail <span id="feedback-mail" style="font-weight:600"></span> <button type="button" id="feedback-copy" style="margin-left:2px">copy</button></span><button type="button" id="warn-ok">Got it</button></div>
+    <div class="runrow">
+      <div class="scope" role="group" aria-label="Check scope">
+        <button data-scope="selection" aria-pressed="true">Selection</button>
+        <button data-scope="page" aria-pressed="false">Page</button>
+        <button data-scope="file" aria-pressed="false">Whole file</button>
+      </div>
+      <button class="run" id="run">Run check</button>
+    </div>
+  </div>
+
+  <div class="stepper show" id="stepper" role="tablist" aria-label="Steps"></div>
+
+  <div class="scroll" id="scroll">
+    <div class="panel show" id="panel-intro">
+      <p class="hero"><b>What this does.</b> An AI agent that reads your Figma file (through Figma's MCP server, or Dev Mode) sees exactly what is in the file, not what is in your head. This plugin reads the file the same way, shows where the context is thin, and helps you fix it in place.
+      <ol>
+        <li><b>Variables</b>: primitives and semantics, scopes, code names.</li>
+        <li><b>Styles</b>: a named type scale.</li>
+        <li><b>Components</b>: descriptions, properties, states.</li>
+        <li><b>Layers</b>: tokens applied, auto-layout, names.</li>
+        <li><b>Checklist</b>: what only a person can check.</li>
+        <li><b>Report</b>: a summary to share with your team.</li>
+      </ol>
+      <br>Pick a scope and run the check. Everything runs on your machine. No AI, no account, nothing leaves the file, and it only writes when you click Apply.</p><div class="warn-banner show" style="margin-top:14px" role="note"><span class="txt"><b>Results are heuristics:</b> review each suggestion before you apply it. Every change can be undone with Cmd+Z. Work on a copy if the file matters. Provided as is, without warranty.</span></div>
+    </div>
+    <div class="panel" id="panel-step" role="tabpanel"></div>
+  </div>
+
+  <div class="nav" id="nav">
+    <button id="back">‹ Back</button>
+    <span class="pos" id="pos"></span>
+    <button class="next" id="next">Next ›</button>
+  </div>
+  <div class="micro" id="micro">Runs on-device · no AI · nothing leaves your file · <a class="ext" href="#" data-extlink="https://moonlearning.io">learn the whole workflow at moonlearning.io</a> · <span id="ver"></span></div>
+
+  <div class="grip" id="grip" role="separator" aria-label="Resize plugin window" title="Drag to resize">
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M11 1 1 11M11 5 5 11M11 9 9 11" stroke="#b9b6ac" stroke-width="1.2" fill="none"/></svg>
+  </div>
+
+<script>
+  // ---------------------------------------------------------------------------
+  // State and helpers
+  // ---------------------------------------------------------------------------
+  var VERSION = '0.9.7 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
+  var FEEDBACK_EMAIL = 'hello@moonlearning.io'; // beta feedback address; shown in the banner and in the report
+  var state = { scope: 'selection', result: null, step: 0, checklist: {}, done: {}, sel: null, pending: {}, expanded: {} };
+  var STEPS = ['overview', 'variables', 'styles', 'components', 'layers', 'checklist', 'report'];
+  var STEP_LABELS = { overview: 'Overview', variables: 'Variables', styles: 'Styles', components: 'Components', layers: 'Layers', checklist: 'Checklist', report: 'Report' };
+  var SEV = { error: { label: 'Critical', color: 'var(--crit)' }, warn: { label: 'Worth fixing', color: 'var(--warn)' }, info: { label: 'Polish', color: 'var(--info)' }, note: { label: 'Not scored', color: 'var(--info)' } };
+  var SCOPE_LABEL = { ALL_SCOPES: 'All', ALL_FILLS: 'Fills', FRAME_FILL: 'Frame fill', SHAPE_FILL: 'Shape fill', TEXT_FILL: 'Text fill', STROKE_COLOR: 'Stroke', EFFECT_COLOR: 'Effect', CORNER_RADIUS: 'Radius', GAP: 'Gap', WIDTH_HEIGHT: 'Size', TEXT_CONTENT: 'Text', FONT_SIZE: 'Font size', LINE_HEIGHT: 'Line height', LETTER_SPACING: 'Letter spacing', FONT_WEIGHT: 'Weight', FONT_FAMILY: 'Family', FONT_STYLE: 'Style', OPACITY: 'Opacity', STROKE_FLOAT: 'Stroke width', PARAGRAPH_SPACING: 'Paragraph', PARAGRAPH_INDENT: 'Indent', EFFECT_FLOAT: 'Effect' };
+  var FIELD_LABEL = { paddingLeft: 'padding left', paddingRight: 'padding right', paddingTop: 'padding top', paddingBottom: 'padding bottom', itemSpacing: 'gap' };
+  var TOK = 0;
+
+  function send(m) { parent.postMessage({ pluginMessage: m }, '*'); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function meterClass(v) { return v === null ? '' : v >= 80 ? 'g' : v >= 55 ? 'y' : 'r'; }
+  function meterColor(v) { return v >= 80 ? 'var(--good)' : v >= 55 ? 'var(--warn)' : 'var(--crit)'; }
+  function verdict(v) { return v >= 85 ? 'AI-ready. Strong foundation.' : v >= 70 ? 'Mostly ready. A few gaps to close.' : v >= 50 ? 'Getting there. Worth a cleanup pass.' : 'Not yet. An agent would be guessing here.'; }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+  function stepByKey(k) { return (state.result && state.result.steps || []).filter(function (s) { return s.key === k; })[0]; }
+  function remaining(c) { return c.items.filter(function (it) { return !state.done[it._t]; }).length; }
+  function tokenize() { if (!state.result) return; state.result.steps.forEach(function (s) { s.checks.forEach(function (c) { c.items.forEach(function (it, i) { it._t = c.key + ':' + i; }); }); }); }
+  var HID = 0;
+  function whyBlock(text, header) { var id = 'why' + (++HID); return {
+    btn: '<button type="button" class="help" aria-expanded="false" aria-controls="' + id + '" data-act="help" data-target="' + id + '" aria-label="' + esc(header) + '">?</button>',
+    panel: '<p class="why-inline" id="' + id + '" hidden><b>' + esc(header) + ':</b> ' + esc(text) + '</p>' }; }
+
+  // ---------------------------------------------------------------------------
+  // Teaching copy per step
+  // ---------------------------------------------------------------------------
+  var WHY = {
+    variables: '<p>Think of variables in <b>two layers</b>. <b>Primitives</b> are the raw palette: <code>color/blue/500</code> is a colour, <code>space/4</code> is 16. <b>Semantics</b> say what a value is for: <code>color/background/brand</code> points at color/blue/500, <code>space/inset/md</code> points at space/4. Layers use semantics only.</p>'
+      + '<pre>primitive                semantic                       layer\ncolor/blue/500  ◄────   color/background/brand  ◄────  Card background\n#2F6BFF                 --color-background-brand       (bound)\n                        scope: fills</pre>'
+      + '<p>An agent reading <code>color/background/brand</code> knows the intent, can follow the alias to the value, and, when the <b>code syntax</b> is set, knows the exact token name in code. <b>Scopes</b> keep each token in the right picker and tell the agent its role. <b>Hiding primitives</b> from publishing makes the semantic token the only choice.</p>'
+      + '<p>A naming pattern that works and matches the W3C token format: <b>category / property / variant</b>. Primitives: <code>color/blue/500</code>, <code>space/4</code>, <code>radius/2</code>. Semantics: <code>color/background/brand</code>, <code>color/content/muted</code>, <code>color/border/subtle</code>, <code>space/inset/md</code>. Any names work as long as primitives are pure values and semantics describe the use. If you have code, use the developers\' names.</p>',
+    styles: '<p>Text styles are your <b>type scale with names</b>: <code>heading/lg</code>, <code>body/md</code>, <code>caption</code>. An agent maps a style name to a type token in code. A text layer with a one-off font setting is not on the scale, so the agent has to guess which token it meant.</p>'
+      + '<p>Where you can, build styles from variables (font size, family, weight), so the style and the code token share one source. Line height stays a value: Figma reads a bound line-height variable as pixels, which is not what code means.</p>',
+    components: '<p>Through MCP an agent reads a component\'s <b>description</b> first, then its <b>properties</b>. That is all it knows about what the component is and when to use it. Layer names come after.</p>'
+      + '<p>So the description is the contract: <b>what it is, when to use it, when not to, which states exist</b>. Property names and variant values should be the words the code uses (<code>size: sm / md / lg</code>), because that is a mapping an agent can do without thinking.</p>'
+      + '<p>Select any component on the canvas and the card below turns into a description editor. A draft is written from the name and properties; edit it so it is true.</p>',
+    layers: '<p>This is where the tokens get <b>used</b>. A fill bound to <code>color/background/brand</code> tells an agent the token; a raw <code>#2F6BFF</code> tells it nothing. The same goes for radius, padding, gaps and type.</p>'
+      + '<p>Where a raw value matches a variable exactly, the plugin offers the match. It prefers <b>semantic</b> tokens over primitives. If nothing matches, the value is off your scale: either add a token or change the value.</p>'
+      + '<p><b>Auto-layout</b> is how an agent reads direction, spacing and resizing. <b>Names</b> like <code>Card / Header</code> are the hooks it uses to understand structure.</p>',
+    checklist: '<p>Some things no plugin can check: whether names match the code, whether the rules are written down, whether an agent can actually reach the file. This list is for those. Tick what is true. Ticks are saved in the file, so your whole team sees the same list.</p>'
+      + '<p>The last item is the real test: give a fresh agent only this file and ask for a small screen. Every place it stumbles is a gap.</p>',
+    report: '<p>A plain-text summary of scores, open findings and the checklist. Paste it into a ticket, a Slack message or a handover doc, so the developer side knows what is done and what is still open.</p>'
+  };
+
+  var CHECKLIST = [
+    { title: 'Match with code', items: [
+      { key: 'match-names', label: 'Component names in Figma are the names used in code', why: 'An agent that sees Button in Figma and Button in code knows they are the same thing. "Btn / Primary" in one and PrimaryButton in the other forces a guess. Where code has parts Figma folds into one (Card.Header, Card.Body), name the layers after the parts.' },
+      { key: 'match-props', label: 'Property names and variant values match the code props, as far as Figma allows', why: 'size: sm / md / lg in Figma and size="sm" in code is a mapping an agent can do without thinking. Different words break it. Match what can be matched: prop names, variant values, booleans. Some things Figma cannot express: props that only exist in code (href, onClick, aria-label), children and slots beyond one instance swap, states the browser sets (hover, focus), values computed at runtime. Do not fake those with extra variants. Name them in the component description ("In code: href, onClick. Hover and focus are set by the browser.") so the gap is written down, not hidden.' },
+      { key: 'match-tokens', label: 'Variables carry the code token names (code syntax)', why: 'The Variables step checks this automatically. Tick it once every token has the name a developer would recognise.' },
+      { key: 'published', label: 'The library is published, and products use instances, not copies', why: 'Detached copies drift. An instance keeps the link, and an agent can follow it back to the component and its description.' }
+    ] },
+    { title: 'Docs and rules', items: [
+      { key: 'when-not', label: 'Every component says when to use it, and when not to', why: '"Use for the main action, one per screen" is a rule an agent can follow. "Primary button" is not.' },
+      { key: 'rules-as-rules', label: 'Rules are written as rules, not preferences', why: '"Never put a button inside a link" can be checked. "Use sparingly" cannot. Agents copy what they find, so vague rules produce vague results.' },
+      { key: 'docs-linked', label: 'Docs links point at a live page (Storybook, Zeroheight, wiki)', why: 'A link an agent can follow beats a summary it has to trust.' },
+      { key: 'readme', label: 'The file has a cover or README page that explains how it is organised', why: 'The first page is the first thing a person or an agent reads. Say what lives where, which collection is which, and who to ask.' }
+    ] },
+    { title: 'Tokens', items: [
+      { key: 'semantic-complete', label: 'There is a semantic token for every use: background, text, border, icon', why: 'If the only text colour is a primitive, layers will use the primitive. Cover the uses, and the primitives can stay hidden.' },
+      { key: 'same-set', label: 'Figma and code have the same set of tokens: nothing exists in only one place', why: 'A token that exists only in Figma gets invented in code by an agent, or dropped. One that exists only in code never reaches the design. A token nobody uses in Figma can still be right, if the code uses it. Compare the two lists once with a developer, or generate one side from the other.' },
+      { key: 'modes-named', label: 'Modes are named for what they switch (Light / Dark, Compact / Comfortable)', why: '"Mode 1" tells an agent nothing about how to map it to a theme in code.' }
+    ] },
+    { title: 'Components', items: [
+      { key: 'states', label: 'Every interactive component shows its states: default, hover, focus, pressed, disabled', why: 'States do not exist in a static frame unless you draw them. Without them the agent invents them.' },
+      { key: 'default-variant', label: 'The default variant is the top-left one, and it is the code default', why: 'Figma takes the variant at the top-left of the grid as the default, not the first layer. An agent instantiating the component gets that one.' },
+      { key: 'slots', label: 'Slots and instance swaps are named for what goes in them', why: '"Leading icon" says what fits. "Instance 3" does not.' },
+      { key: 'no-detached', label: 'No detached components or one-off variations in product files', why: 'A detached component looks like a component to a person and like a pile of frames to an agent.' }
+    ] },
+    { title: 'Accessibility', items: [
+      { key: 'contrast', label: 'Text and background pairs pass contrast (4.5:1, or 3:1 for large text)', why: 'An agent copies your colour pairs faithfully, failures included. The Layers step estimates this. Only the design can fix it.' },
+      { key: 'focus', label: 'Focus states are visible, and not signalled by colour alone', why: 'Keyboard users need to see where they are. An agent builds what the design shows.' },
+      { key: 'targets', label: 'Tap targets are at least 44 × 44', why: 'Small targets get copied small.' },
+      { key: 'a11y-notes', label: 'Role, accessible name and keyboard behaviour are noted where they are not obvious', why: 'A component description or an annotation is the only place an agent can learn that a card is a link, or that a custom control needs arrow keys.' }
+    ] },
+    { title: 'Reach', items: [
+      { key: 'mcp', label: 'Someone on the team can connect an agent to this file (Dev Mode, MCP)', why: 'AI-ready means an agent can actually reach it. Figma\'s MCP server needs a Dev or Full seat. Try it once with a developer.' },
+      { key: 'fresh-agent-test', label: 'The test: a fresh agent built a small screen from this file and got it right', why: 'The only test that counts. Every place it stumbles is a gap in the file. Fix, test again.' },
+      { key: 'round-trip', label: 'The round trip: an agent rebuilt a component from the code back into this file, and it matches yours', why: 'Ask a developer to have an agent generate one component from the code into Figma (over MCP). Put it next to yours. Same look, same names, same properties, and it scores the same or better in this plugin: then Figma and code are one design. Every difference is drift, and now you can see which side to fix.' }
+    ] }
+  ];
+  var CHECKLIST_TOTAL = CHECKLIST.reduce(function (n, s) { return n + s.items.length; }, 0);
+
+  // ---------------------------------------------------------------------------
+  // Description drafts (from name and properties; a starting point, not truth)
+  // ---------------------------------------------------------------------------
+  function guessType(name) {
+    var n = String(name).toLowerCase();
+    var map = [
+      [/card|tile/, 'a container that groups related content for one item', 'presenting a single item with a title, supporting text and optional media or actions', 'group / article'],
+      [/button|btn|cta/, 'a clickable button that triggers an action', 'the actionable controls on a screen', 'button'],
+      [/modal|dialog|popup|sheet/, 'an overlay dialog for a focused task or confirmation', 'interrupting the flow for a decision or short task', 'dialog'],
+      [/input|field|textbox|textfield/, 'a form input for entering a value', 'collecting a single piece of user input', 'textbox'],
+      [/select|dropdown|combobox|picker/, 'a control for choosing from a list of options', 'picking one option from many', 'combobox'],
+      [/checkbox/, 'a control for toggling an option on or off', 'selecting any number of options', 'checkbox'],
+      [/radio/, 'a control for choosing one option from a small set', 'choosing exactly one option', 'radio'],
+      [/toggle|switch/, 'a switch for turning a setting on or off', 'an instant on or off setting', 'switch'],
+      [/badge|tag|chip|pill|label/, 'a small label for status, category or metadata', 'labelling status, categories or counts', 'status (or decorative)'],
+      [/avatar/, 'a small image representing a user or entity', 'showing who something belongs to', 'img'],
+      [/tooltip|popover|hint/, 'a small hint shown on hover or focus', 'explaining an element without taking space', 'tooltip'],
+      [/navbar|navigation|\bnav\b|menu|tabs?\b/, 'a navigation control for moving between views', 'letting people move between sections', 'navigation'],
+      [/header|appbar|topbar/, 'the top region of a page or section', 'framing the top of a view', 'banner'],
+      [/footer/, 'the bottom region of a page', 'closing the page with secondary links', 'contentinfo'],
+      [/list|row|item/, 'a repeatable row within a list', 'one entry in a list of similar things', 'listitem'],
+      [/table|grid/, 'a table of rows and columns', 'showing structured, comparable data', 'table'],
+      [/accordion|collapse|disclosure/, 'an expandable section that shows and hides content', 'progressively revealing detail', 'button + region'],
+      [/alert|banner|toast|notification|snackbar/, 'a message that informs the user of status', 'communicating status or feedback', 'alert / status'],
+      [/breadcrumb/, 'a trail showing the current location in a hierarchy', 'helping people see where they are', 'navigation'],
+      [/pagination|pager/, 'controls for moving between pages of content', 'navigating long, paged content', 'navigation'],
+      [/progress|spinner|loader|skeleton/, 'an indicator of progress or loading', 'showing that work is happening', 'progressbar / status'],
+      [/slider|range/, 'a control for choosing a value along a range', 'setting a value within a range', 'slider'],
+      [/icon/, 'a small symbol used for actions or meaning', 'adding a recognisable symbol', 'img (or decorative)'],
+      [/link|anchor/, 'a text link to another destination', 'navigating to related content', 'link'],
+      [/divider|separator|rule/, 'a line that separates content', 'visually separating groups', 'separator']
+    ];
+    for (var i = 0; i < map.length; i++) if (map[i][0].test(n)) return { desc: map[i][1], use: map[i][2], role: map[i][3] };
+    return { desc: 'a reusable UI component', use: 'this pattern, used consistently wherever it appears', role: 'group' };
+  }
+  function propMeaning(p) {
+    var k = String(p).toLowerCase().replace(/[^a-z]/g, '');
+    var m = { title: 'the heading text', heading: 'the heading text', label: 'the visible label', description: 'the body text', subtitle: 'secondary text', body: 'the body text', text: 'the text content', content: 'the content',
+      media: 'an optional image or visual', image: 'an optional image', img: 'an optional image', thumbnail: 'a thumbnail image', cover: 'a cover image', photo: 'a photo', actions: 'the buttons shown', buttons: 'the buttons shown', cta: 'the call to action',
+      icon: 'an optional icon', leadingicon: 'an optional leading icon', trailingicon: 'an optional trailing icon', size: 'the scale, e.g. small / medium / large', state: 'the interaction state, e.g. default / hover / disabled',
+      variant: 'the visual style or emphasis', type: 'the visual style', style: 'the visual style', kind: 'the visual style', emphasis: 'the visual emphasis', disabled: 'whether the control is turned off', selected: 'whether it is active', active: 'whether it is active', checked: 'whether it is checked',
+      href: 'the destination', url: 'the destination', link: 'the destination', count: 'the number shown', number: 'the number shown', value: 'the value shown', placeholder: 'hint text shown when empty', name: 'the name shown', avatar: 'the avatar shown' };
+    return m[k] || 'what it controls';
+  }
+  function starterText(name, props, variants) {
+    var g = guessType(name), s = name + ': ' + g.desc + '. Use for ' + g.use + '. Do not use for [say what the alternative is].';
+    if (props && props.length) s += ' Props: ' + props.map(function (p) { return p + ' (' + propMeaning(p) + ')'; }).join(', ') + '.';
+    if (variants && variants.length) s += ' Variants: ' + variants.map(function (v) { return v.name + (v.values && v.values.length ? ' (' + v.values.join(', ') + ')' : ''); }).join('; ') + '.';
+    var stateAxis = (variants || []).filter(function (v) { return /state|status|interaction/i.test(v.name); })[0];
+    if (stateAxis && stateAxis.values && stateAxis.values.length) s += ' States: ' + stateAxis.values.join(', ') + '. Say what changes in each (colour, border, cursor, content).';
+    else s += ' States: default. Describe hover, focus, pressed and disabled if they exist, and what changes.';
+    s += ' Accessibility: role ' + g.role + '; name [what a screen reader should announce]; keyboard [how to reach and activate it]; do not signal state with colour alone.';
+    return s;
+  }
+  function tokenDraft(name, type) {
+    var n = String(name).toLowerCase(), last = n.split('/').pop();
+    var role = /text|content|fg|foreground|label|heading/.test(n) ? 'text' : /border|stroke|outline|divider/.test(n) ? 'border' : /icon/.test(n) ? 'icon' : /bg|background|surface|canvas|overlay|fill/.test(n) ? 'surface' : /radius|corner/.test(n) ? 'radius' : /space|spacing|gap|padding|inset/.test(n) ? 'spacing' : /size|width|height/.test(n) ? 'size' : /font|type|line|letter|weight/.test(n) ? 'type' : (type === 'COLOR' ? 'colour' : 'value');
+    var R = { text: 'text', border: 'borders and dividers', icon: 'icons', surface: 'backgrounds', radius: 'corner radius', spacing: 'padding and gaps', size: 'sizes', type: 'type', colour: 'colour', value: 'value' }[role];
+    var mods = [
+      [/default|base|primary(?!-)/, 'Default ' + R + ': the standard choice. Not for emphasis or secondary content.'],
+      [/muted|secondary|subtle|soft|tertiary/, role === 'text' ? 'Secondary text: captions, helper text, metadata. Not for body copy or anything that must be read first.' : 'Subtle ' + R + ': quiet separation and low-emphasis elements. Not where something must stand out.'],
+      [/inverse|on-dark|ondark|contrast/, 'Inverse ' + R + ': used on dark or brand-coloured backgrounds. Not on the default background.'],
+      [/brand|accent/, 'Brand ' + R + ': the main action and brand moments, sparingly. Not for status or large areas.'],
+      [/danger|error|destructive|critical|negative/, 'Error state ' + R + ': validation errors and destructive actions. Not for general emphasis.'],
+      [/success|positive|ok/, 'Success state ' + R + ': confirmations and completed states. Not for general emphasis.'],
+      [/warning|caution|attention/, 'Warning state ' + R + ': things that need attention but are not errors.'],
+      [/info|notice/, 'Informational state ' + R + ': neutral notices and tips.'],
+      [/disabled|inactive/, 'Disabled state ' + R + ': controls that cannot be used right now. Not for secondary content.'],
+      [/hover/, 'Hover state ' + R + ': the change on pointer hover. Pair with a matching focus state.'],
+      [/pressed|active/, 'Pressed or active state ' + R + '.'],
+      [/focus/, 'Focus state ' + R + ': the visible keyboard focus. Never remove it.'],
+      [/link/, 'Links: inline text links. Not for buttons.'],
+      [/placeholder/, 'Placeholder text in empty inputs. Not for real values.'],
+      [/elevated|raised|card/, 'Raised surfaces such as cards and menus. Not for the page background.'],
+      [/page|canvas|app/, 'The page background. Not for cards or panels.'],
+      [/(^|\D)(xs|sm|small)$/, 'Small step of the ' + R + ' scale: tight spots, compact components.'],
+      [/(^|\D)(md|medium|base)$/, 'Default step of the ' + R + ' scale: the standard choice.'],
+      [/(^|\D)(lg|large|xl)$/, 'Large step of the ' + R + ' scale: section-level use.']
+    ];
+    for (var i = 0; i < mods.length; i++) if (mods[i][0].test(last)) return mods[i][1];
+    for (var j = 0; j < mods.length; j++) if (mods[j][0].test(n)) return mods[j][1];
+    return (R[0].toUpperCase() + R.slice(1)) + ' for [what]. Not for [what].';
+  }
+  function pascal(s) { return String(s).replace(/[^a-zA-Z0-9]+/g, ' ').trim().split(' ').map(function (w) { return w ? w[0].toUpperCase() + w.slice(1) : ''; }).join('') || 'Component'; }
+  function camel(s) { var p = pascal(s); return p ? p[0].toLowerCase() + p.slice(1) : 'prop'; }
+  function scaffold(name, props, variants) {
+    var tag = pascal(name), attrs = [];
+    (variants || []).forEach(function (v) { if (v.values && v.values.length) attrs.push(camel(v.name) + '="' + v.values[0] + '"'); });
+    (props || []).forEach(function (p) { attrs.push(camel(p) + '={…}'); });
+    return attrs.length ? '<' + tag + '\n  ' + attrs.join('\n  ') + '\n/>' : '<' + tag + ' />';
+  }
+  function descFormHTML(name, props, variants, existing, nodeId) {
+    var seed = (existing && existing.trim()) ? existing : starterText(name, props, variants);
+    return '<div class="field"><label>Description <span class="hint">(a draft from the name and properties; edit it so it is true)</span></label>'
+      + '<textarea class="desc" rows="6">' + esc(seed) + '</textarea></div>'
+      + '<details class="scaffold"><summary>What an agent would scaffold from this</summary><pre>' + esc(scaffold(name, props, variants)) + '</pre></details>'
+      + '<div class="dactions"><button class="btn primary" data-act="apply-desc" data-node="' + esc(nodeId) + '">Apply description</button>'
+      + '<button class="btn quiet" data-act="reset-draft" data-name="' + esc(name) + '">↻ Reset draft</button>'
+      + '<button class="btn quiet" data-act="select" data-node="' + esc(nodeId) + '">Select</button></div>';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rendering: stepper, nav, panels
+  // ---------------------------------------------------------------------------
+  function renderStepper() {
+    var el = $('stepper'), h = '';
+    STEPS.forEach(function (k, i) {
+      var cls = '', st = stepByKey(k);
+      if (st && st.score !== null && st.score !== undefined) cls = meterClass(st.score);
+      if (k === 'checklist') { var n = Object.keys(state.checklist).length; cls = n === CHECKLIST_TOTAL ? 'g' : (n > 0 ? 'y' : ''); }
+      h += '<button role="tab" data-step="' + i + '" aria-current="' + (state.step === i ? 'step' : 'false') + '" title="' + STEP_LABELS[k] + '"><span class="num ' + cls + '">' + (i === 0 ? '○' : i) + '</span><span class="lbl">' + STEP_LABELS[k] + '</span></button>';
+    });
+    el.innerHTML = h;
+    el.classList.toggle('show', !!state.result);
+  }
+  function renderNav() {
+    var nav = $('nav'); nav.classList.toggle('show', !!state.result);
+    if (!state.result) return;
+    $('back').disabled = state.step === 0;
+    $('next').textContent = state.step === STEPS.length - 1 ? 'Done' : 'Next ›';
+    $('pos').innerHTML = '<b>' + STEP_LABELS[STEPS[state.step]] + '</b> · ' + (state.step + 1) + ' of ' + STEPS.length;
+  }
+  function goStep(i) {
+    if (!state.result) return;
+    state.step = Math.max(0, Math.min(STEPS.length - 1, i));
+    renderStepper(); renderNav(); renderStep();
+    $('scroll').scrollTop = 0;
+  }
+  function renderStep() {
+    var key = STEPS[state.step], el = $('panel-step');
+    $('panel-intro').classList.remove('show'); el.classList.add('show');
+    if (key === 'overview') el.innerHTML = overviewHTML();
+    else if (key === 'checklist') el.innerHTML = checklistHTML();
+    else if (key === 'report') el.innerHTML = reportHTML();
+    else el.innerHTML = stepHTML(stepByKey(key));
+    if (key === 'components') renderSelCard();
+  }
+
+  function stepHeader(title, what, note, score) {
+    var chip = score === null || score === undefined ? '' : '<span class="chip ' + meterClass(score) + '">' + score + ' / 100</span>';
+    return '<div class="step-h"><h2>' + esc(title) + chip + '</h2><p>' + esc(what) + '</p>' + (note ? '<div class="note">' + esc(note) + '</div>' : '') + '</div>';
+  }
+  function whyHTML(key, open) { return '<details class="why"' + (open ? ' open' : '') + '><summary>Why this matters</summary><div class="body">' + WHY[key] + '</div></details>'; }
+
+  // ---- generic step with checks ----
+  function stepHTML(st) {
+    if (!st) return '';
+    var h = stepHeader(st.label, st.what, st.note, st.score) + whyHTML(st.key, true);
+    if (st.key === 'variables' && st.meta && st.meta.collections && st.meta.collections.length) {
+      h += '<p class="lead">Your collections</p><div class="rows" style="margin-bottom:10px">';
+      st.meta.collections.forEach(function (c) {
+        var kind = c.kind === 'semantic' ? 'semantic (aliases)' : c.kind === 'primitive' ? 'primitive (raw values)' : c.kind === 'mixed' ? 'mixed: ' + c.alias + ' aliases, ' + c.raw + ' raw' : 'empty';
+        h += '<div class="row"><div class="r1"><span class="nm">' + esc(c.name) + '<small>' + c.count + ' variables · ' + esc(kind) + (c.modes.length > 1 ? ' · modes: ' + esc(c.modes.map(function (m) { return m.name; }).join(', ')) : '') + '</small></span></div></div>';
+      });
+      h += '</div>';
+    } else if (st.key === 'variables' && st.meta && st.meta.libraries && st.meta.libraries.length) {
+      h += '<p class="lead">Libraries in use</p><div class="rows" style="margin-bottom:10px">';
+      st.meta.libraries.forEach(function (l) { h += '<div class="row"><div class="r1"><span class="nm">' + esc(l.libraryName) + ' · ' + esc(l.name) + '<small>' + l.count + ' variables · read from the library</small></span></div></div>'; });
+      h += '</div>';
+    } else if (st.key === 'variables') {
+      h += '<div class="empty">No variables in this file, and none from a library. Variables are the tokens an agent maps to code, so this is the first thing to set up. Start with a primitives collection (colours, numbers) and a semantic one that aliases it.</div>';
+    }
+    if (st.key === 'components') h += '<p class="lead">Context for the selection</p><div id="ctx-sel"></div>';
+    h += '<p class="lead">Checks</p>';
+    var any = false;
+    st.checks.forEach(function (c) { if (c.total > 0) { any = true; h += checkHTML(c); } });
+    if (!any) h += '<div class="empty">Nothing to measure in this scope. Widen the scope to Page or Whole file.</div>';
+    return h;
+  }
+  function checkHTML(c) {
+    var rem = remaining(c), ok = rem === 0, s = SEV[c.severity];
+    var open = !ok && state.expanded[c.key] !== false && (c.severity === 'error' || c.severity === 'warn' || state.expanded[c.key] === true);
+    var cnt = ok ? '<b>✓</b> ' + c.pass + ' of ' + c.total : '<b>' + rem + '</b> to fix · ' + c.pass + ' of ' + c.total + ' ok';
+    if (c.severity === 'note') cnt = ok ? '<b>✓</b> ' + c.total + ' checked' : '<b>' + rem + '</b> to look at';
+    var h = '<div class="check' + (ok ? ' ok' : '') + '" data-check="' + esc(c.key) + '" aria-expanded="' + (open ? 'true' : 'false') + '"><button class="chead" data-act="toggle-check"><span class="d" style="background:' + (ok ? 'var(--good)' : s.color) + '"></span><span class="gi"><b>' + esc(c.label) + '</b><span class="sev">' + (ok ? 'Done' : s.label) + '</span></span><span class="cnt">' + cnt + '</span><span class="chev">›</span></button>';
+    var wb = whyBlock(c.why, 'Why an agent cares');
+    h += '<div class="cbody"><div class="fix"><b>Fix ·</b> ' + esc(c.fix) + ' ' + wb.btn + '</div>' + wb.panel;
+    if (c.caveat) h += '<p class="hint" style="margin:0 0 8px">' + esc(c.caveat) + '</p>';
+    if (!ok) h += batchHTML(c);
+    if (c.passed && c.passed.length) { h += '<details class="scaffold"><summary>Show the ' + c.passed.length + ' that pass (' + esc(c.passedLabel || '') + ')</summary><div class="rows">'; c.passed.forEach(function (x) { h += '<div class="row"><div class="r1"><span class="nm">' + esc(x.name) + '</span><span class="val">' + esc(x.value) + '</span></div></div>'; }); h += '</div></details>'; }
+    if (c.items.length) {
+      h += '<div class="rows">';
+      var shown = 0, LIMIT = 60;
+      c.items.forEach(function (it) { if (state.done[it._t] && shown > LIMIT) return; if (shown >= LIMIT) return; h += rowHTML(c, it); shown++; });
+      if (c.items.length > shown) h += '<div class="more">' + (c.items.length - shown) + ' more. Fix these first, then run the check again.</div>';
+      h += '</div>';
+    } else if (ok) h += '<div class="empty win" style="padding:8px 0 2px">✓ ' + (c.caveat ? 'All ' + c.total + ' filled in.' : 'All good here.') + '</div>';
+    h += '</div></div>';
+    return h;
+  }
+  function batchHTML(c) {
+    var open = c.items.filter(function (it) { return !state.done[it._t]; });
+    if (!open.length) return '';
+    if (c.key === 'scopes') return '<div class="batch"><button class="btn primary" data-act="batch-scopes" data-check="' + c.key + '">Apply suggested scopes to all ' + open.length + '</button><span class="hint">Suggestions come from the names. Check a few first.</span></div>';
+    if (c.key === 'code-syntax') return '<div class="batch" style="align-items:center"><label class="hint" style="display:flex;align-items:center;gap:6px">Prefix <input type="text" class="pfx" placeholder="e.g. sds" style="width:90px;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:11.5px" aria-label="Prefix for all code names"></label><button class="btn primary" data-act="batch-syntax" data-check="' + c.key + '">Apply suggested names to all ' + open.length + '</button><span class="hint">Uses the names in the fields below. A prefix rewrites them all; edit single ones where the code differs.</span></div>';
+    if (c.key === 'hide-primitives') {
+      var cols = {}; open.forEach(function (it) { if (!cols[it.collectionId]) cols[it.collectionId] = { name: it.collection, n: 0 }; cols[it.collectionId].n++; });
+      var h = '<div class="batch">'; Object.keys(cols).forEach(function (id) { h += '<button class="btn primary" data-act="hide-collection" data-col="' + esc(id) + '" data-check="' + c.key + '">Hide all ' + cols[id].n + ' in “' + esc(cols[id].name) + '”</button>'; });
+      return h + '<span class="hint">Reversible: select the variables and untick "Hide from publishing".</span></div>';
+    }
+    return '';
+  }
+  function candSelect(cands, cls) {
+    if (!cands || !cands.length) return '';
+    var h = '<select class="' + cls + '" aria-label="Matching token">';
+    cands.forEach(function (x, i) { h += '<option value="' + esc(x.id) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(x.name) + (x.semantic === false ? ' (primitive)' : '') + '</option>'; });
+    return h + '</select>';
+  }
+  function rowHTML(c, it) {
+    var t = it._t, done = !!state.done[t], nm, r2 = '', sel = '';
+    var selBtn = '<button class="btn quiet" data-act="select" data-node="' + esc(it.id) + '">Select</button>';
+    if (it.kind === 'variable') {
+      nm = '<span class="nm">' + esc(it.name) + '<small>' + esc(it.collection) + '</small></span>';
+      if (c.key === 'scopes') r2 = (it.suggest || []).map(function (s) { return '<span class="tagchip">' + esc(SCOPE_LABEL[s] || s) + '</span>'; }).join('') + '<span style="flex:1"></span><button class="btn" data-act="set-scopes" data-token="' + t + '">' + (done ? 'Done ✓' : 'Apply') + '</button>';
+      else if (c.key === 'code-syntax') r2 = '<input type="text" class="syn" value="' + esc(it.suggest) + '" aria-label="Code name" spellcheck="false"><button class="btn" data-act="set-syntax" data-token="' + t + '">' + (done ? 'Done ✓' : 'Apply') + '</button>';
+      else if (c.key === 'var-desc') r2 = '<input type="text" class="vd" placeholder="What it is for. Not for what." aria-label="Description"><button class="btn quiet" data-act="draft-var-desc" data-token="' + t + '" title="Write a draft from the name">Draft</button><button class="btn" data-act="set-var-desc" data-token="' + t + '">' + (done ? 'Done ✓' : 'Apply') + '</button>';
+      else if (c.key === 'hide-primitives') r2 = '<span class="hint">Shown in the published library</span><span style="flex:1"></span><button class="btn" data-act="set-hidden" data-token="' + t + '">' + (done ? 'Hidden ✓' : 'Hide') + '</button>';
+      else if (c.key === 'semantic-naming') r2 = '<input type="text" class="vn" value="' + esc(it.name) + '" aria-label="New name" spellcheck="false"><button class="btn" data-act="rename-variable" data-token="' + t + '">' + (done ? 'Done ✓' : 'Rename') + '</button>';
+      else r2 = '<span class="hint">' + esc(it.note || '') + '</span>';
+    } else if (it.kind === 'collection') {
+      nm = '<span class="nm">' + esc(it.name) + '</span>';
+      r2 = '<span class="hint">' + esc(it.note || '') + ' · fix this in the variable panel</span>';
+    } else if (it.kind === 'style') {
+      nm = '<span class="nm">' + esc(it.name) + '<small>text style</small></span>';
+      if (c.key === 'text-style-desc') r2 = '<input type="text" class="sd" placeholder="Where it belongs, where it does not" aria-label="Description"><button class="btn" data-act="set-style-desc" data-token="' + t + '">' + (done ? 'Done ✓' : 'Apply') + '</button>';
+      else r2 = '<span class="hint">Edit the style and bind size, family and weight to variables</span>';
+    } else if (it.kind === 'note') {
+      nm = '<span class="nm">' + esc(it.name) + '</span>';
+    } else { // node
+      var small = it.nodeType ? it.nodeType.toLowerCase().replace('_', ' ') : '';
+      nm = '<span class="nm">' + esc(it.name) + (small ? '<small>' + esc(small) + '</small>' : '') + '</span>';
+      switch (c.key) {
+        case 'desc': case 'desc-rich': case 'states':
+          r2 = '<button class="btn" data-act="toggle-desc" data-token="' + t + '">' + (done ? 'Done ✓' : (c.key === 'desc' ? 'Write description' : 'Edit description')) + '</button>' + selBtn;
+          sel = '<div class="descform" hidden data-token="' + t + '">' + descFormHTML(it.name, it.props, it.variants, it.descText, it.id) + '</div>';
+          break;
+        case 'props':
+          r2 = '<span class="tagchip">' + esc(it.propName) + '</span><input type="text" class="pn" placeholder="New name, e.g. Has icon" aria-label="New property name"><button class="btn" data-act="rename-property" data-token="' + t + '">' + (done ? 'Done ✓' : 'Rename') + '</button>' + selBtn;
+          break;
+        case 'values':
+          r2 = '<span class="tagchip">' + esc(it.propName) + ' = ' + esc(it.value) + '</span><span class="hint">rename in the property panel</span>' + selBtn;
+          break;
+        case 'docs-link':
+          r2 = '<input type="url" class="dl" placeholder="https://…" aria-label="Documentation link"><button class="btn" data-act="set-doc-link" data-token="' + t + '">' + (done ? 'Done ✓' : 'Add link') + '</button>' + selBtn;
+          break;
+        case 'colors': {
+          var sw = it.value && it.value[0] === '#' ? '<span class="sw" style="background:' + esc(it.value.split(' ')[0]) + '"></span>' : '';
+          r2 = '<span class="val">' + sw + esc(it.prop === 'strokes' ? 'stroke ' : 'fill ') + esc(it.value) + '</span>';
+          if (it.candidates && it.candidates.length) r2 += candSelect(it.candidates, 'cand') + '<button class="btn" data-act="bind-color" data-token="' + t + '">' + (done ? 'Bound ✓' : 'Bind') + '</button>';
+          else r2 += '<span class="hint">no token with this value</span>';
+          r2 += selBtn; break; }
+        case 'semantic-on-layers':
+          r2 = '<span class="val">' + esc(it.bound) + ' →</span>' + candSelect(it.candidates, 'cand') + '<button class="btn" data-act="bind-color" data-token="' + t + '">' + (done ? 'Bound ✓' : 'Rebind') + '</button>' + selBtn;
+          break;
+        case 'radius':
+          r2 = '<span class="val">radius ' + esc(it.value) + '</span>';
+          if (it.candidates && it.candidates.length) r2 += candSelect(it.candidates, 'cand') + '<button class="btn" data-act="bind-radius" data-token="' + t + '">' + (done ? 'Bound ✓' : 'Bind') + '</button>';
+          else r2 += '<span class="hint">no token with this value</span>';
+          r2 += selBtn; break;
+        case 'spacing': {
+          var matched = (it.fields || []).filter(function (f) { return f.candidates && f.candidates.length; });
+          r2 = '<span class="val">' + esc((it.fields || []).map(function (f) { return FIELD_LABEL[f.field] + ' ' + f.value + (f.candidates && f.candidates.length ? ' → ' + f.candidates[0].name : ''); }).join(' · ')) + '</span>';
+          if (matched.length) r2 += '<button class="btn" data-act="bind-spacing" data-token="' + t + '">' + (done ? 'Bound ✓' : 'Bind ' + matched.length + ' matching') + '</button>';
+          else r2 += '<span class="hint">no tokens with these values</span>';
+          r2 += selBtn; break; }
+        case 'text':
+          r2 = '<span class="val">' + esc(it.value) + '</span>';
+          if (it.candidates && it.candidates.length) r2 += candSelect(it.candidates, 'cand') + '<button class="btn" data-act="apply-text-style" data-token="' + t + '">' + (done ? 'Applied ✓' : 'Apply style') + '</button>';
+          else r2 += '<span class="hint">no style with this font and size</span>';
+          r2 += selBtn; break;
+        case 'names':
+          r2 = '<input type="text" class="nn" placeholder="e.g. Card / Header" aria-label="New layer name"><button class="btn" data-act="rename-node" data-token="' + t + '">' + (done ? 'Done ✓' : 'Rename') + '</button>' + selBtn;
+          break;
+        case 'contrast':
+          r2 = '<span class="val">' + esc(it.value) + '</span>' + selBtn; break;
+        case 'layout': case 'comp-layout':
+          r2 = (it.count ? '<span class="val">' + it.count + ' children, no auto-layout</span>' : '<span class="hint">Select, then Shift+A</span>') + selBtn; break;
+        default:
+          r2 = selBtn;
+      }
+    }
+    return '<div class="row' + (done ? ' done' : '') + '" data-token="' + t + '"><div class="r1">' + nm + '</div>' + (r2 ? '<div class="r2">' + r2 + '</div>' : '') + sel + '<div class="err" hidden></div></div>';
+  }
+
+  // ---- overview ----
+  function overviewHTML() {
+    var d = state.result;
+    if (d.overall === null) return '<div class="empty">Nothing measurable here. Select a component or frame, or switch scope to Page / Whole file, then run again.</div>';
+    var circ = 2 * Math.PI * 33, off = circ * (1 - d.overall / 100), col = meterColor(d.overall);
+    var h = '<div class="score-card"><div class="ring"><svg width="78" height="78"><circle cx="39" cy="39" r="33" fill="none" stroke="#ece8df" stroke-width="7"/><circle cx="39" cy="39" r="33" fill="none" stroke="' + col + '" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + circ + '" stroke-dashoffset="' + off + '"/></svg><div class="num"><b>' + d.overall + '</b><small>/ 100</small></div></div>';
+    h += '<div class="score-meta"><h2>' + verdict(d.overall) + '</h2><p>' + esc(d.fileName) + ' · ' + plural(d.counts.components, 'component') + ' · ' + plural(d.counts.variables, 'variable') + ' · ' + plural(d.counts.nodes, 'layer') + '</p>';
+    h += '<div class="pills"><span class="pill"><span class="d" style="background:var(--crit)"></span>' + d.counts.errors + ' critical</span><span class="pill"><span class="d" style="background:var(--warn)"></span>' + d.counts.warnings + ' worth fixing</span><span class="pill"><span class="d" style="background:var(--info)"></span>' + d.counts.infos + ' polish</span></div></div></div>';
+    // start here: top 3 checks by impact
+    var sevW = { error: 3, warn: 2, info: 1, note: 0 }, list = [];
+    d.steps.forEach(function (st, si) { st.checks.forEach(function (c) { var rem = remaining(c); if (rem && c.scored) list.push({ c: c, step: si + 1, impact: rem * sevW[c.severity] * st.weight }); }); });
+    list.sort(function (a, b) { return b.impact - a.impact; });
+    if (list.length) {
+      h += '<p class="lead">Start here</p>';
+      list.slice(0, 3).forEach(function (x, i) { var wb = whyBlock(x.c.why, 'Why an agent cares');
+        h += '<div class="action"><div class="n">' + (i + 1) + '</div><div class="b"><b>' + esc(x.c.label) + ' ' + wb.btn + '</b><span>' + remaining(x.c) + ' to fix · ' + esc(x.c.fix) + '</span>' + wb.panel + '</div><button class="do" data-act="go-check" data-step="' + x.step + '" data-check="' + esc(x.c.key) + '">Go</button></div>'; });
+    } else h += '<div class="empty win">✓ Every automatic check passes. Go through the checklist for the rest.</div>';
+    h += '<p class="lead">Steps</p>';
+    d.steps.forEach(function (st, si) {
+      var val = st.score === null ? '—' : st.score, w = st.score === null ? 0 : st.score, open = 0;
+      st.checks.forEach(function (c) { if (c.scored) open += remaining(c); });
+      var barCol = st.score === null ? 'var(--track)' : (st.score >= 80 ? 'var(--good)' : st.score >= 55 ? 'var(--warn)' : 'var(--accent)');
+      h += '<div class="cat" data-act="go-step" data-step="' + (si + 1) + '" role="button" tabindex="0"><div class="cat-top"><b>' + (si + 1) + ' · ' + esc(st.label) + '</b><span class="val">' + val + (st.score === null ? '' : '<small>/100</small>') + '</span></div><div class="hint"' + (open ? '' : ' style="color:var(--good)"') + '>' + (open ? open + ' to fix' : (st.score === null ? 'Nothing to measure in this scope' : '✓ All automatic checks pass')) + '</div><div class="bar"><i style="width:' + w + '%;background:' + barCol + '"></i></div></div>';
+    });
+    var n = Object.keys(state.checklist).length;
+    h += '<div class="cat" data-act="go-step" data-step="5" role="button" tabindex="0"><div class="cat-top"><b>5 · Checklist</b><span class="val">' + n + '<small>/' + CHECKLIST_TOTAL + '</small></span></div><div class="hint">What only a person can check</div><div class="bar"><i style="width:' + Math.round(n / CHECKLIST_TOTAL * 100) + '%;background:var(--good)"></i></div></div>';
+    return h;
+  }
+
+  // ---- components: context card for the current selection ----
+  function renderSelCard() {
+    var el = $('ctx-sel'); if (!el) return;
+    var sel = state.sel;
+    if (!sel || sel.kind === 'none') { el.innerHTML = '<div class="sel-add"><div class="k">Current selection</div><h4>Nothing selected</h4><div class="sub">Select a component on the canvas to write its description here. Select any frame or element to leave a note an agent can read.</div></div>'; return; }
+    if (sel.kind === 'multi') { el.innerHTML = '<div class="sel-add"><div class="k">Current selection</div><h4>' + sel.count + ' layers selected</h4><div class="sub">Pick a single layer to add context to it.</div></div>'; return; }
+    if (sel.kind === 'variant') { el.innerHTML = '<div class="sel-add"><div class="k">Variant of a set</div><h4>' + esc(sel.name) + '</h4><div class="sub">This is one variant of <b>' + esc(sel.setName) + '</b>. Document the set once and it covers every variant.</div><div class="dactions"><button class="btn" data-act="select" data-node="' + esc(sel.setId) + '">Select the set</button></div></div>'; return; }
+    if (sel.kind === 'instance') { el.innerHTML = '<div class="sel-add"><div class="k">Instance</div><h4>' + esc(sel.name) + '</h4><div class="sub">Context lives on the main component, not on instances. Right-click → Go to main component, then come back.</div></div>'; return; }
+    if (sel.kind === 'component' || sel.kind === 'set') {
+      var t = sel.kind === 'set' ? 'Component set' : 'Component', hasDesc = sel.descText && sel.descText.trim();
+      var mir = hasDesc ? '' : '<div class="mirror"><span class="ml">What an agent reads now</span><p>Just the name “' + esc(sel.name) + '”. Nothing about what it is or when to use it.</p></div>';
+      el.innerHTML = '<div class="sel-add"><div class="k">' + t + (hasDesc ? ' · edit description' : ' · add description') + '</div><h4>' + esc(sel.name) + '</h4>' + mir + '<div class="sub">Writes to the <b>description</b> field, in Figma\'s right panel under the component name. Most designers never open it. Over MCP it is the first thing an agent reads.</div>' + descFormHTML(sel.name, sel.props, sel.variants, hasDesc ? sel.descText : '', sel.id)
+        + '<div class="field" style="margin-top:10px"><label>Documentation link <span class="hint">(optional)</span></label><div class="dactions"><input type="url" class="dl" value="' + esc(sel.docLink || '') + '" placeholder="https://…"><button class="btn" data-act="set-doc-link-sel" data-node="' + esc(sel.id) + '">' + (sel.docLink ? 'Update' : 'Add') + '</button></div></div></div>';
+      return;
+    }
+    if (sel.kind === 'node') {
+      if (!sel.canAnnotate) { el.innerHTML = '<div class="sel-add"><div class="k">Current selection</div><h4>' + esc(sel.name) + '</h4><div class="sub">This layer type cannot hold a note. Try a frame, group or component.</div></div>'; return; }
+      var hasNote = sel.annoText && sel.annoText.trim();
+      el.innerHTML = '<div class="sel-add"><div class="k">' + esc(sel.nodeType.toLowerCase()) + (hasNote ? ' · edit note' : ' · add a note') + '</div><h4>' + esc(sel.name) + '</h4>' + (hasNote ? '' : '<div class="mirror"><span class="ml">What an agent reads now</span><p>Just the name “' + esc(sel.name) + '”. No note.</p></div>')
+        + '<div class="sub">Single elements cannot take a description, so this writes a Dev Mode <b>annotation</b>, the note an agent reads for non-components.</div><div class="field"><label>Note for the agent</label><textarea class="anno" placeholder="e.g. Separates primary and secondary actions. Decorative, not interactive.">' + esc(hasNote ? sel.annoText : '') + '</textarea></div><div class="dactions"><button class="btn primary" data-act="apply-anno" data-node="' + esc(sel.id) + '">Apply annotation</button></div></div>';
+      return;
+    }
+    el.innerHTML = '<div class="sel-add"><div class="k">Current selection</div><h4>' + esc(sel.name) + '</h4><div class="sub">This layer type cannot hold context.</div></div>';
+  }
+
+  // ---- checklist ----
+  function checklistHTML() {
+    var n = Object.keys(state.checklist).length;
+    var h = stepHeader('Checklist', 'What no plugin can check. Tick what is true for this file. Ticks are saved in this file with your Figma display name, so the whole team sees who checked what. Nothing leaves the file.', null, null) + whyHTML('checklist', n === 0);
+    h += '<div class="progress"><b>' + n + ' of ' + CHECKLIST_TOTAL + ' checked</b><div class="pbar"><i style="width:' + Math.round(n / CHECKLIST_TOTAL * 100) + '%"></i></div></div>';
+    CHECKLIST.forEach(function (sec) {
+      h += '<div class="cl-sec"><h3>' + esc(sec.title) + '</h3>';
+      sec.items.forEach(function (it) {
+        var on = state.checklist[it.key], wb = whyBlock(it.why, 'Why'), id = 'cl-' + it.key;
+        h += '<div class="cl' + (on ? ' on' : '') + '"><input type="checkbox" id="' + id + '" data-act="tick" data-key="' + it.key + '"' + (on ? ' checked' : '') + '><label for="' + id + '">' + esc(it.label) + ' ' + wb.btn + (on && on.by ? '<span class="by">✓ ' + esc(on.by) + '</span>' : '') + wb.panel + '</label></div>';
+      });
+      h += '</div>';
+    });
+    h += '<div class="dactions" style="margin-top:6px"><button class="btn quiet" data-act="reset-checklist">Reset the list for this file</button></div>';
+    return h;
+  }
+
+  // ---- report ----
+  function reportText() {
+    var d = state.result, L = [];
+    L.push('AI Ready Check ' + VERSION + ' · ' + d.fileName + ' · scope: ' + d.scope + ' · ' + new Date().toISOString().slice(0, 10));
+    L.push('Overall: ' + (d.overall === null ? 'nothing measured' : d.overall + ' / 100 · ' + verdict(d.overall)));
+    L.push('');
+    d.steps.forEach(function (st, i) {
+      L.push((i + 1) + '. ' + st.label + (st.score === null ? '' : ' · ' + st.score + ' / 100'));
+      st.checks.forEach(function (c) { if (c.total === 0) return; var rem = remaining(c); L.push('   ' + (rem ? '[ ] ' : '[x] ') + c.label + (rem ? ' · ' + rem + ' to fix' : '')); });
+      L.push('');
+    });
+    L.push('5. Checklist · ' + Object.keys(state.checklist).length + ' / ' + CHECKLIST_TOTAL);
+    CHECKLIST.forEach(function (sec) { sec.items.forEach(function (it) { L.push('   ' + (state.checklist[it.key] ? '[x] ' : '[ ] ') + it.label + (sec.title === 'Match with code' && !state.checklist[it.key] ? ' (dev)' : '')); }); });
+    L.push('');
+    L.push('Made with AI Ready Check (beta), a free Figma plugin by Christine Vallaure, moonlearning.io · feedback: ' + FEEDBACK_EMAIL);
+    return L.join('\n');
+  }
+  function reportHTML() {
+    var h = stepHeader('Report', 'A plain-text summary to share with your team. The items marked (dev) need a developer.', null, null) + whyHTML('report', false);
+    h += '<p class="lead">Summary</p><textarea class="report" id="report" readonly spellcheck="false">' + esc(reportText()) + '</textarea>';
+    h += '<div class="dactions" style="margin-top:8px"><button class="btn primary" data-act="copy-report">Copy report</button><button class="btn" data-act="rerun">Run the check again</button></div>';
+    h += '<p class="lead">What next</p><p class="hero" style="padding-top:0">Fix what you can here, tick the checklist, and hand the (dev) items to a developer with this report. Then run the check again. AI-ready is a list you keep working through, not a badge.</p>';
+    return h;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Actions (one delegated handler)
+  // ---------------------------------------------------------------------------
+  function itemByToken(t) { var r = null; state.result.steps.forEach(function (st) { st.checks.forEach(function (c) { c.items.forEach(function (it) { if (it._t === t) r = { c: c, it: it }; }); }); }); return r; }
+  function rowOf(t) { return document.querySelector('.row[data-token="' + t + '"]'); }
+  function fix(action, payload, token, btn, notify) {
+    var tk = token || ('x' + (++TOK));
+    if (btn) { btn.disabled = true; btn.dataset.orig = btn.textContent; btn.textContent = 'Applying…'; }
+    state.pending[tk] = { btn: btn, token: token };
+    var m = { type: 'fix', action: action, token: tk, notify: notify }; Object.keys(payload).forEach(function (k) { m[k] = payload[k]; });
+    send(m);
+  }
+  function refreshCheckHeader(key) {
+    var c = null; state.result.steps.forEach(function (st) { st.checks.forEach(function (x) { if (x.key === key) c = x; }); }); if (!c) return;
+    var el = document.querySelector('.check[data-check="' + key + '"]'); if (!el) return;
+    var rem = remaining(c), ok = rem === 0;
+    el.classList.toggle('ok', ok);
+    el.querySelector('.d').style.background = ok ? 'var(--good)' : SEV[c.severity].color;
+    el.querySelector('.sev').textContent = ok ? 'Done' : SEV[c.severity].label;
+    var fixedNow = c.total - c.items.length + (c.items.length - rem);
+    el.querySelector('.cnt').innerHTML = ok ? '<b>✓</b> ' + c.total + ' of ' + c.total : '<b>' + rem + '</b> to fix · ' + fixedNow + ' of ' + c.total + ' ok';
+    var b = el.querySelector('.batch'); if (b) b.outerHTML = batchHTML(c);
+    renderStepper();
+  }
+
+  $('scroll').addEventListener('click', function (e) {
+    var a = e.target.closest('[data-extlink]'); if (a) { e.preventDefault(); send({ type: 'open-url', url: a.getAttribute('data-extlink') }); return; }
+    var el = e.target.closest('[data-act]'); if (!el) return;
+    var act = el.dataset.act, row = el.closest('.row'), t = el.dataset.token, found = t ? itemByToken(t) : null, it = found && found.it;
+    var q = function (cls) { var host = row || el.closest('.sel-add') || el.closest('.descform'); return host ? host.querySelector(cls) : null; };
+    var val = function (cls) { var i = q(cls); return i ? i.value.trim() : ''; };
+    var cand = function () { var s = q('select.cand'); return s ? s.value : (it && it.candidates && it.candidates[0] ? it.candidates[0].id : null); };
+    switch (act) {
+      case 'help': { e.stopPropagation(); var p = $(el.dataset.target); if (!p) return; var open = el.getAttribute('aria-expanded') === 'true'; el.setAttribute('aria-expanded', String(!open)); p.hidden = open; return; }
+      case 'toggle-check': { var ck = el.closest('.check'); var o = ck.getAttribute('aria-expanded') === 'true'; ck.setAttribute('aria-expanded', o ? 'false' : 'true'); state.expanded[ck.dataset.check] = !o; return; }
+      case 'select': send({ type: 'select', nodeId: el.dataset.node }); return;
+      case 'go-step': goStep(parseInt(el.dataset.step, 10)); return;
+      case 'go-check': { goStep(parseInt(el.dataset.step, 10)); var ck2 = document.querySelector('.check[data-check="' + el.dataset.check + '"]'); if (ck2) { ck2.setAttribute('aria-expanded', 'true'); state.expanded[el.dataset.check] = true; ck2.scrollIntoView({ block: 'start', behavior: 'smooth' }); } return; }
+      case 'toggle-desc': { var f = row.querySelector('.descform'); if (f) f.hidden = !f.hidden; return; }
+      case 'reset-draft': { var host = el.closest('.descform') || el.closest('.sel-add'); var ta = host && host.querySelector('.desc'); var itx = it || (state.sel || {}); if (ta) { ta.value = starterText(el.dataset.name, itx.props, itx.variants); ta.focus(); } return; }
+      case 'apply-desc': { var text = val('.desc'); if (!text) return; fix('apply-description', { nodeId: el.dataset.node, text: text }, t, el, 'Description saved'); return; }
+      case 'apply-anno': { fix('apply-annotation', { nodeId: el.dataset.node, text: val('.anno') }, null, el, 'Annotation saved'); return; }
+      case 'set-doc-link-sel': { var u = val('.dl'); if (!u) return; fix('set-doc-link', { nodeId: el.dataset.node, uri: u }, null, el, 'Link saved'); return; }
+      case 'set-scopes': fix('set-scopes', { variableId: it.id, scopes: it.suggest }, t, el); return;
+      case 'set-syntax': { var s = val('.syn'); if (!s) return; fix('set-syntax', { variableId: it.id, syntax: s }, t, el); return; }
+      case 'draft-var-desc': { var di = q('.vd'); if (di) { di.value = tokenDraft(it.name, it.type); di.focus(); } return; }
+      case 'set-var-desc': { var vd = val('.vd'); if (!vd) return; fix('set-var-desc', { variableId: it.id, text: vd }, t, el); return; }
+      case 'set-hidden': fix('set-hidden', { variableId: it.id, hidden: true }, t, el); return;
+      case 'rename-variable': { var vn = val('.vn'); if (!vn || vn === it.name) return; fix('rename-variable', { variableId: it.id, name: vn }, t, el); return; }
+      case 'set-style-desc': { var sd = val('.sd'); if (!sd) return; fix('set-style-desc', { styleId: it.id, text: sd }, t, el); return; }
+      case 'rename-property': { var pn = val('.pn'); if (!pn) return; fix('rename-property', { nodeId: it.id, propKey: it.propKey, newName: pn }, t, el, 'Property renamed'); return; }
+      case 'set-doc-link': { var dl = val('.dl'); if (!dl) return; fix('set-doc-link', { nodeId: it.id, uri: dl }, t, el); return; }
+      case 'bind-color': { var vid = cand(); if (!vid) return; fix('bind-color', { nodeId: it.id, prop: it.prop, paintIndex: it.paintIndex, variableId: vid }, t, el); return; }
+      case 'bind-radius': { var rid = cand(); if (!rid) return; fix('bind-radius', { nodeId: it.id, variableId: rid }, t, el); return; }
+      case 'bind-spacing': { var b = (it.fields || []).filter(function (f) { return f.candidates && f.candidates.length; }).map(function (f) { return { field: f.field, variableId: f.candidates[0].id }; }); if (!b.length) return; fix('bind-spacing', { nodeId: it.id, bindings: b }, t, el); return; }
+      case 'apply-text-style': { var sid = cand(); if (!sid) return; fix('apply-text-style', { nodeId: it.id, styleId: sid }, t, el); return; }
+      case 'rename-node': { var nn = val('.nn'); if (!nn) return; fix('rename-node', { nodeId: it.id, name: nn }, t, el); return; }
+      case 'batch-scopes': case 'batch-syntax': {
+        if (el.dataset.arm !== '1') { el.dataset.arm = '1'; el.dataset.orig = el.textContent; el.textContent = 'Click again to confirm'; setTimeout(function () { if (el.dataset.arm === '1') { el.dataset.arm = ''; el.textContent = el.dataset.orig; } }, 4000); return; }
+        var c = null; state.result.steps.forEach(function (st) { st.checks.forEach(function (x) { if (x.key === el.dataset.check) c = x; }); }); if (!c) return;
+        var items = [], toks = [];
+        c.items.forEach(function (x) { if (state.done[x._t]) return; if (act === 'batch-scopes') items.push({ id: x.id, scopes: x.suggest }); else { var r = rowOf(x._t), i = r && r.querySelector('.syn'); items.push({ id: x.id, syntax: i ? i.value.trim() : x.suggest }); } toks.push(x._t); });
+        if (!items.length) return;
+        el.disabled = true; el.textContent = 'Applying to ' + items.length + '…';
+        state.pending['b' + (++TOK)] = { btn: el, tokens: toks, check: c.key };
+        send({ type: 'fix', action: act, token: 'b' + TOK, items: items, notify: items.length + ' variables updated' }); return; }
+      case 'hide-collection': {
+        if (el.dataset.arm !== '1') { el.dataset.arm = '1'; el.dataset.orig = el.textContent; el.textContent = 'Click again to confirm'; setTimeout(function () { if (el.dataset.arm === '1') { el.dataset.arm = ''; el.textContent = el.dataset.orig; } }, 4000); return; }
+        var c2 = null; state.result.steps.forEach(function (st) { st.checks.forEach(function (x) { if (x.key === el.dataset.check) c2 = x; }); }); if (!c2) return;
+        var toks2 = c2.items.filter(function (x) { return !state.done[x._t] && x.collectionId === el.dataset.col; }).map(function (x) { return x._t; });
+        el.disabled = true; el.textContent = 'Hiding…';
+        state.pending['b' + (++TOK)] = { btn: el, tokens: toks2, check: c2.key };
+        send({ type: 'fix', action: 'hide-collection', token: 'b' + TOK, collectionId: el.dataset.col, hidden: true, notify: 'Primitives hidden from publishing' }); return; }
+      case 'tick': send({ type: 'checklist-set', key: el.dataset.key, checked: el.checked }); return;
+      case 'reset-checklist': { if (el.dataset.arm === '1') { send({ type: 'checklist-reset' }); } else { el.dataset.arm = '1'; el.textContent = 'Click again to reset all ticks'; } return; }
+      case 'copy-report': { var ta2 = $('report'); ta2.select(); try { document.execCommand('copy'); el.textContent = 'Copied ✓'; send({ type: 'notify', text: 'Report copied' }); } catch (err) { el.textContent = 'Select the text and copy it'; } return; }
+      case 'rerun': send({ type: 'run', scope: state.scope }); return;
+    }
+  });
+  $('scroll').addEventListener('input', function (e) {
+    if (!e.target.classList.contains('pfx')) return;
+    var pfx = e.target.value.trim().replace(/^-+|-+$/g, ''), ck = e.target.closest('.check'); if (!ck) return;
+    [].forEach.call(ck.querySelectorAll('.row'), function (r) { var f = itemByToken(r.dataset.token), i = r.querySelector('.syn'); if (!f || !i || state.done[r.dataset.token]) return; i.value = '--' + (pfx ? pfx + '-' : '') + String(f.it.suggest).replace(/^--/, ''); });
+  });
+  $('scroll').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.cat[data-act]')) { e.preventDefault(); e.target.click(); } });
+  document.querySelector('.scope').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; state.scope = b.dataset.scope; [].forEach.call(this.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); });
+  $('run').addEventListener('click', function () { send({ type: 'run', scope: state.scope }); });
+  $('feedback-mail').textContent = FEEDBACK_EMAIL; $('ver').textContent = 'beta ' + VERSION;
+  $('feedback-copy').addEventListener('click', function () { var ta = document.createElement('textarea'); ta.value = FEEDBACK_EMAIL; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); $('feedback-copy').textContent = 'copied ✓'; } catch (e) { $('feedback-copy').textContent = FEEDBACK_EMAIL; } document.body.removeChild(ta); });
+  function setBanner(on) { $('warn').classList.toggle('show', on); $('beta-pill').setAttribute('aria-expanded', String(on)); }
+  $('warn-ok').addEventListener('click', function () { setBanner(false); send({ type: 'banner-dismiss' }); });
+  $('beta-pill').addEventListener('click', function () { setBanner(!$('warn').classList.contains('show')); });
+  send({ type: 'banner-get' });
+  $('stepper').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) goStep(parseInt(b.dataset.step, 10)); });
+  $('back').addEventListener('click', function () { goStep(state.step - 1); });
+  $('next').addEventListener('click', function () { if (state.step === STEPS.length - 1) goStep(0); else goStep(state.step + 1); });
+  document.body.addEventListener('click', function (e) { var a = e.target.closest('.micro [data-extlink], .top [data-extlink]'); if (a) { e.preventDefault(); send({ type: 'open-url', url: a.getAttribute('data-extlink') }); } });
+  document.addEventListener('keydown', function (e) { if (!state.result || e.target.matches('input, textarea, select')) return; if (e.key === 'ArrowRight' && (e.altKey || e.metaKey)) goStep(state.step + 1); if (e.key === 'ArrowLeft' && (e.altKey || e.metaKey)) goStep(state.step - 1); });
+
+  // resize grip
+  (function () { var grip = $('grip'), drag = false, sx, sy, sw, sh, raf = null, last = null;
+    function flush() { raf = null; if (last) send({ type: 'resize', width: last.w, height: last.h }); }
+    function move(e) { if (!drag) return; e.preventDefault(); last = { w: sw + (e.screenX - sx), h: sh + (e.screenY - sy) }; if (!raf) raf = requestAnimationFrame(flush); }
+    function stop(e) { if (!drag) return; drag = false; document.body.style.userSelect = ''; try { grip.releasePointerCapture(e.pointerId); } catch (_) {} window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }
+    grip.addEventListener('pointerdown', function (e) { drag = true; sx = e.screenX; sy = e.screenY; sw = window.innerWidth; sh = window.innerHeight; try { grip.setPointerCapture(e.pointerId); } catch (_) {} document.body.style.userSelect = 'none'; e.preventDefault(); window.addEventListener('pointermove', move); window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); });
+    grip.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    var big = false;
+    $('sizebtn').addEventListener('click', function () { big = !(window.innerWidth >= 600); send({ type: 'resize', width: big ? 640 : 440, height: big ? 920 : 720 }); });
+  })();
+
+  // ---------------------------------------------------------------------------
+  // Inbound
+  // ---------------------------------------------------------------------------
+  var runBtn = $('run');
+  onmessage = function (e) {
+    var msg = e.data.pluginMessage; if (!msg) return;
+    if (msg.type === 'running') { runBtn.disabled = true; runBtn.innerHTML = '<span class="spin"></span>Reading…'; }
+    else if (msg.type === 'result') {
+      runBtn.disabled = false; runBtn.textContent = 'Run again';
+      if (msg.data.error === 'empty-selection') { state.result = null; renderStepper(); renderNav(); $('panel-step').classList.remove('show'); $('panel-intro').classList.add('show'); $('panel-intro').innerHTML = '<div class="empty">Nothing selected. Select a component or frame, or switch the scope to Page or Whole file, then run again.</div>'; return; }
+      state.result = msg.data; state.done = {}; state.pending = {}; state.expanded = {}; tokenize();
+      goStep(0);
+    }
+    else if (msg.type === 'banner') { setBanner(!msg.data); }
+    else if (msg.type === 'checklist') { state.checklist = msg.data || {}; if (state.result && (STEPS[state.step] === 'checklist' || STEPS[state.step] === 'overview' || STEPS[state.step] === 'report')) renderStep(); renderStepper(); }
+    else if (msg.type === 'selection-info') { state.sel = msg.data; if (state.result && STEPS[state.step] === 'components') renderSelCard(); }
+    else if (msg.type === 'fixed') {
+      var p = state.pending[msg.token]; delete state.pending[msg.token]; if (!p) return;
+      if (msg.ok) {
+        var toks = p.tokens || (p.token ? [p.token] : []);
+        toks.forEach(function (t) { state.done[t] = true; var r = rowOf(t); if (r) { r.classList.add('done'); var b = r.querySelector('.btn:not(.quiet):not(.primary)'); if (b) { b.textContent = 'Done ✓'; b.disabled = true; } var f = r.querySelector('.descform'); if (f) f.hidden = true; var tb = r.querySelector('[data-act="toggle-desc"]'); if (tb) { tb.textContent = 'Done ✓'; tb.disabled = true; } } });
+        if (p.btn && !p.tokens) { p.btn.textContent = p.btn.classList.contains('primary') ? 'Applied ✓' : 'Done ✓'; p.btn.disabled = true; }
+        if (p.btn && p.tokens) { p.btn.textContent = 'Done ✓'; }
+        var keys = {}; toks.forEach(function (t) { keys[t.split(':')[0]] = 1; }); if (p.check) keys[p.check] = 1; Object.keys(keys).forEach(refreshCheckHeader);
+        if (msg.action === 'apply-description' && !p.token) send({ type: 'selection-info' });
+      } else {
+        if (p.btn) { p.btn.disabled = false; p.btn.textContent = p.btn.dataset.orig || 'Try again'; }
+        var r2 = p.token ? rowOf(p.token) : (p.btn && p.btn.closest('.row')); var errEl = r2 && r2.querySelector('.err');
+        if (errEl) { errEl.textContent = msg.error || 'That did not work.'; errEl.hidden = false; } else send({ type: 'notify', text: 'Could not apply: ' + (msg.error || 'unknown error') });
+      }
+    }
+    else if (msg.type === 'error') { runBtn.disabled = false; runBtn.textContent = 'Run check'; $('panel-intro').classList.add('show'); $('panel-step').classList.remove('show'); $('panel-intro').innerHTML = '<div class="empty">Something went wrong: ' + esc(msg.data || msg.message || 'unknown error') + '</div>'; }
+  };
+  renderStepper(); renderNav();
+</script>
+</body>
+</html>

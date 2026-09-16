@@ -1,0 +1,5 @@
+.DS_Store
+# internal: submission notes and working renders stay out of the public repo
+publish-guide.md
+listing-assets/
+node_modules/
