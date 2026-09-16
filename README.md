@@ -27,6 +27,14 @@ Runs entirely on your machine. No AI, no account, no network. It only writes to 
 
 Try it on a copy of your file first. The checks are heuristics, not a verdict, and this is a beta.
 
+## Safety, privacy and liability
+
+**What it can and cannot do to your file.** The plugin cannot reach the internet, so nothing you have can leave your computer: no server, no analytics, no AI service. It only ever changes your file when you click a button, and every change is one Cmd+Z. It never deletes anything. Your team library is read, never written. The one thing it stores is the checklist, as plugin data in your own file.
+
+**Confidential files.** You can use it. It reads only what Figma already shows you. If your company reviews plugins before use, this repository is the full source, so your security team can read exactly what it does, decide, and even change things to your needs. And as with any plugin, if your organisation's policy says no third-party plugins, that policy wins.
+
+**Liability.** This is a beta, provided as is, without warranty of any kind. The checks are heuristics and can be wrong. You use it at your own risk: review each suggestion before you apply it, work on a copy if the file matters, and keep Figma's version history on. The author is not liable for any loss or damage arising from its use. See [LICENSE](LICENSE).
+
 ## Feedback
 
 Wrong result, a bug, or an idea? Mail **hello@moonlearning.io**. A screenshot of the check that was wrong, and what you expected, is the most useful thing you can send.
