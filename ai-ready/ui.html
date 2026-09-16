@@ -277,7 +277,7 @@
   // ---------------------------------------------------------------------------
   // State and helpers
   // ---------------------------------------------------------------------------
-  var VERSION = '0.9.7 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
+  var VERSION = '0.9.8 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
   var FEEDBACK_EMAIL = 'hello@moonlearning.io'; // beta feedback address; shown in the banner and in the report
   var state = { scope: 'selection', result: null, step: 0, checklist: {}, done: {}, sel: null, pending: {}, expanded: {} };
   var STEPS = ['overview', 'variables', 'styles', 'components', 'layers', 'checklist', 'report'];
@@ -857,7 +857,7 @@
   var runBtn = $('run');
   onmessage = function (e) {
     var msg = e.data.pluginMessage; if (!msg) return;
-    if (msg.type === 'running') { runBtn.disabled = true; runBtn.innerHTML = '<span class="spin"></span>Reading…'; }
+    if (msg.type === 'running') { runBtn.disabled = true; runBtn.innerHTML = '<span class="spin"></span>Reading file and libraries…'; }
     else if (msg.type === 'result') {
       runBtn.disabled = false; runBtn.textContent = 'Run again';
       if (msg.data.error === 'empty-selection') { state.result = null; renderStepper(); renderNav(); $('panel-step').classList.remove('show'); $('panel-intro').classList.add('show'); $('panel-intro').innerHTML = '<div class="empty">Nothing selected. Select a component or frame, or switch the scope to Page or Whole file, then run again.</div>'; return; }

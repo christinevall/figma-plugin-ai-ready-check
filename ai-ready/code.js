@@ -143,7 +143,34 @@ function nameStyle(name) {
   return 'plain';
 }
 
-var LIBRARY_IMPORT_CAP = 1500; // variables read from enabled libraries, at most
+var LIBRARY_IMPORT_CAP = 800;      // variables read from enabled libraries, at most
+var LIBRARY_TIME_BUDGET_MS = 6000; // stop reading libraries after this; what was read still counts
+var LIBRARY_CACHE_MS = 10 * 60 * 1000;
+var libCache = null;               // { at, libraries, libVars, partial } reused across runs in one session
+
+// Reads library variables in parallel batches. Each import is a round trip to Figma's servers,
+// so sequential reads made a big library take minutes; batched they take seconds, and only once.
+async function readLibraryVariables(localIds) {
+  if (libCache && Date.now() - libCache.at < LIBRARY_CACHE_MS) return libCache;
+  var libraries = [], libVars = [], partial = false, started = Date.now();
+  function timeUp() { return Date.now() - started > LIBRARY_TIME_BUDGET_MS; }
+  async function batch(items, fn, size) { for (var i = 0; i < items.length; i += size) { if (timeUp()) { partial = true; break; } await Promise.all(items.slice(i, i + size).map(function (it) { return fn(it).catch(function () { return null; }); })); } }
+  try {
+    var libCols = await figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync();
+    var lists = [];
+    await batch(libCols, async function (col) { var list = await figma.teamLibrary.getVariablesInLibraryCollectionAsync(col.key); lists.push({ col: col, list: list }); }, 6);
+    for (var i = 0; i < lists.length; i++) {
+      var col = lists[i].col, lib = { name: col.name, libraryName: col.libraryName, key: col.key, count: 0 };
+      var keys = lists[i].list.slice(0, Math.max(0, LIBRARY_IMPORT_CAP - libVars.length));
+      if (keys.length < lists[i].list.length) partial = true;
+      await batch(keys, async function (lv) { var iv = await figma.variables.importVariableByKeyAsync(lv.key); if (iv && !localIds[iv.id]) { libVars.push(iv); lib.count++; } }, 25);
+      libraries.push(lib);
+      if (timeUp()) { partial = true; break; }
+    }
+  } catch (e) {}
+  libCache = { at: Date.now(), libraries: libraries, libVars: libVars, partial: partial };
+  return libCache;
+}
 
 async function loadVariables() {
   var cols = [], vars = [];
@@ -153,20 +180,8 @@ async function loadVariables() {
 
   // Variables from enabled team libraries, read-only. They are what a product file binds to,
   // so they must count as tokens and serve as match candidates for the one-click fixes.
-  var libraries = [], libVars = [];
-  try {
-    var libCols = await figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync();
-    for (var lc = 0; lc < libCols.length && libVars.length < LIBRARY_IMPORT_CAP; lc++) {
-      var col = libCols[lc], lib = { name: col.name, libraryName: col.libraryName, key: col.key, count: 0 };
-      try {
-        var list = await figma.teamLibrary.getVariablesInLibraryCollectionAsync(col.key);
-        for (var li = 0; li < list.length && libVars.length < LIBRARY_IMPORT_CAP; li++) {
-          try { var iv = await figma.variables.importVariableByKeyAsync(list[li].key); if (iv && !localIds[iv.id]) { libVars.push(iv); lib.count++; } } catch (e) {}
-        }
-      } catch (e) {}
-      libraries.push(lib);
-    }
-  } catch (e) {}
+  var libRead = await readLibraryVariables(localIds);
+  var libraries = libRead.libraries, libVars = libRead.libVars;
 
   var byId = {}, colById = {};
   vars.forEach(function (v) { byId[v.id] = v; });
@@ -177,14 +192,18 @@ async function loadVariables() {
   for (var pass = 0; pass < 3; pass++) {
     var missing = {};
     Object.keys(byId).forEach(function (id) { var v = byId[id]; Object.keys(v.valuesByMode || {}).forEach(function (m) { var val = v.valuesByMode[m]; if (val && typeof val === 'object' && val.type === 'VARIABLE_ALIAS' && !byId[val.id]) missing[val.id] = true; }); });
-    var ids = Object.keys(missing); if (!ids.length) break;
-    for (var mi = 0; mi < ids.length; mi++) { try { var tv = await figma.variables.getVariableByIdAsync(ids[mi]); if (tv) byId[tv.id] = tv; } catch (e) {} }
+    var ids = Object.keys(missing).slice(0, 400); if (!ids.length) break;
+    var fetched = await Promise.all(ids.map(function (id) { return figma.variables.getVariableByIdAsync(id).catch(function () { return null; }); }));
+    fetched.forEach(function (tv) { if (tv) byId[tv.id] = tv; });
   }
-  // collections of library variables are not local; look them up on demand
-  var extraCols = {};
-  async function colOf(v) { if (colById[v.variableCollectionId]) return colById[v.variableCollectionId]; if (extraCols[v.variableCollectionId] !== undefined) return extraCols[v.variableCollectionId]; var c = null; try { c = await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId); } catch (e) {} extraCols[v.variableCollectionId] = c; return c; }
-  var allKnown = Object.keys(byId).map(function (id) { return byId[id]; });
-  for (var ai = 0; ai < allKnown.length; ai++) { var cc = await colOf(allKnown[ai]); if (cc && !colById[cc.id]) colById[cc.id] = cc; }
+  // collections of library variables are not local; look each distinct one up once, in parallel
+  var wantCols = {};
+  Object.keys(byId).forEach(function (id) { var cid = byId[id].variableCollectionId; if (cid && !colById[cid]) wantCols[cid] = true; });
+  var colIds = Object.keys(wantCols);
+  if (colIds.length && figma.variables.getVariableCollectionByIdAsync) {
+    var fetchedCols = await Promise.all(colIds.map(function (cid) { return figma.variables.getVariableCollectionByIdAsync(cid).catch(function () { return null; }); }));
+    fetchedCols.forEach(function (c) { if (c) colById[c.id] = c; });
+  }
 
   function resolveValue(v, modeId, depth) {
     var val = v.valuesByMode[modeId];
@@ -248,7 +267,7 @@ async function loadVariables() {
     });
   });
   var hasSemanticColors = Object.keys(info).some(function (id) { return info[id].type === 'COLOR' && info[id].semantic; });
-  return { info: info, collections: collections, colorIndex: colorIndex, floatIndex: floatIndex, aliasTargets: aliasTargets, hasSemanticColors: hasSemanticColors, count: vars.length, libraries: libraries.filter(function (l) { return l.count > 0; }), libraryCount: libVars.length };
+  return { info: info, collections: collections, colorIndex: colorIndex, floatIndex: floatIndex, aliasTargets: aliasTargets, hasSemanticColors: hasSemanticColors, count: vars.length, libraries: libraries.filter(function (l) { return l.count > 0; }), libraryCount: libVars.length, libraryPartial: !!libRead.partial };
 }
 function rankCandidates(list, wantScope) {
   if (!list) return [];
@@ -367,7 +386,7 @@ async function runAudit(scope) {
   }
   var stepVariables = { key: 'variables', label: 'Variables', weight: 30,
     what: 'Variables are the tokens an agent maps to code. This step checks whether they are split into primitives and semantics, named for their use, scoped, and carry their code name.',
-    note: V.libraries.length ? ('This file uses ' + V.libraryCount + ' variables from ' + V.libraries.map(function (l) { return l.libraryName; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).join(', ') + '. Scopes, code names and descriptions are set in the library file: open it and run the check there. Library tokens still count as tokens on your layers, and they are offered as matches in the Layers step.') : 'Variables belong to the whole file, so this step ignores the scope setting above.',
+    note: V.libraries.length ? ('This file uses ' + V.libraryCount + ' variables from ' + V.libraries.map(function (l) { return l.libraryName; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).join(', ') + '. Scopes, code names and descriptions are set in the library file: open it and run the check there. Library tokens still count as tokens on your layers, and they are offered as matches in the Layers step.' + (V.libraryPartial ? ' The library is large, so only part of it was read in this run; matches may be incomplete.' : '')) : 'Variables belong to the whole file, so this step ignores the scope setting above.',
     checks: [vSplit, vNaming, vScopes, vSyntax, vDesc, vHidden, vModes, vStyle],
     meta: { collections: V.collections, variableCount: V.count, libraries: V.libraries, libraryCount: V.libraryCount } };
 
