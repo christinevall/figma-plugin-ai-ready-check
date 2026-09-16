@@ -69,6 +69,8 @@ While iterating, turn on **Plugins → Development → Hot reload plugin** once.
 - The only stored data is the checklist, as plugin data in the user's own file, with the name of who ticked.
 - Team library access is read-only: variables from enabled libraries are imported into the plugin's memory to match raw values against tokens. Nothing in a library is changed.
 
+**In plain words:** the plugin cannot reach the internet, so nothing you have can leave your computer. It only ever changes your file when you click a button, and it double-checks every click before acting on it, so a broken or odd input cannot damage the file. Anything it shows you from your file is treated as text, never as code, so a strangely named layer cannot do anything inside the panel. The one thing it remembers is the checklist, and that is stored in your own file, visible to you. Your team library is read, never written.
+
 ## Legal and privacy
 
 - **Licence:** see `LICENSE.txt`. Copyright Christine Vallaure. Free to use, not to redistribute, provided as is without warranty. Switch to MIT if you want the code reusable; the MIT warranty disclaimer gives the same liability protection.
