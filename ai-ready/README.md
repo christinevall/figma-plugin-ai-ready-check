@@ -1,4 +1,4 @@
-# AI Ready Check · a plugin by Christine Vallaure, moonlearning.io
+# AI Ready Check · a plugin by [Christine Vallaure](https://christinevallaure.com), [moonlearning.io](https://moonlearning.io)
 
 A Figma plugin that walks a designer through making a file readable for AI agents, step by step. It is for people who do not have access to the codebase and want to get their Figma file in order anyway: primitives and semantics, scopes, code names, descriptions, states, tokens on layers, and a checklist for what only a person can check.
 
@@ -81,4 +81,4 @@ While iterating, turn on **Plugins → Development → Hot reload plugin** once.
 - **Impressum:** the listing links to moonlearning.io, which carries the Impressum and contact details required for an EU-based publisher. Support contact in the listing is the same address.
 - **Figma:** publishing accepts Figma's Creator Agreement and Community terms. The plugin uses only the official Plugin API, no proposed APIs. Not affiliated with or endorsed by Figma, Inc.
 
-Made by Christine Vallaure, moonlearning.io. Not affiliated with Figma.
+Made by [Christine Vallaure](https://christinevallaure.com), [moonlearning.io](https://moonlearning.io). Not affiliated with Figma.

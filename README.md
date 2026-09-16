@@ -49,4 +49,4 @@ Wrong result, a bug, or an idea? Mail **hello@moonlearning.io**. A screenshot of
 
 Free to use, not to redistribute, provided as is without warranty. See [LICENSE](LICENSE). Not affiliated with Figma.
 
-Made by [Christine Vallaure](https://moonlearning.io), moonlearning.io.
+Made by [Christine Vallaure](https://christinevallaure.com), [moonlearning.io](https://moonlearning.io).
