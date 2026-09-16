@@ -62,6 +62,18 @@ function firstOpaqueSolid(paints) {
   }
   return null;
 }
+var DRAWING_TYPES = { VECTOR: 1, BOOLEAN_OPERATION: 1, ELLIPSE: 1, RECTANGLE: 1, LINE: 1, STAR: 1, POLYGON: 1 };
+// Icons and illustrations: every child is a shape or path. Auto-layout has nothing to arrange there.
+function isDrawing(node) {
+  if (!node || !('children' in node) || !node.children || !node.children.length) return false;
+  for (var i = 0; i < node.children.length; i++) {
+    var c = node.children[i];
+    if (DRAWING_TYPES[c.type]) continue;
+    if ((c.type === 'GROUP' || c.type === 'FRAME') && isDrawing(c)) continue;
+    return false;
+  }
+  return true;
+}
 function hasAncestorOfType(node, type) {
   var p = node.parent;
   while (p && p.type !== 'PAGE' && p.type !== 'DOCUMENT') { if (p.type === type) return true; p = p.parent; }
@@ -438,7 +450,7 @@ async function runAudit(scope) {
     'Hidden layers are still in the file. An agent reading the structure sees them and may build them. If a layer is a leftover, delete it. If it is a real option, make it a boolean property instead.',
     'Delete leftover hidden layers, or turn optional parts into a boolean property.', { unit: 'layer' });
   var cLayout = mkCheck('comp-layout', 'Components use auto-layout', 'warn',
-    'Auto-layout is how an agent reads direction, spacing and how things resize. A component with absolutely placed children is a picture, not a layout.',
+    'Auto-layout is how an agent reads direction, spacing and how things resize. A component with absolutely placed children is a picture, not a layout. Icons and illustrations, where every child is a shape or a path, are left out: there is nothing to arrange.',
     'Add auto-layout (Shift+A) to the component and its containers.', { unit: 'component' });
 
   components.forEach(function (comp) {
@@ -459,7 +471,7 @@ async function runAudit(scope) {
     var links = []; try { links = comp.documentationLinks || []; } catch (e) {}
     if (links.length) P(cDocs); else F(cDocs, nodeItem(comp, {}));
     var root = comp.type === 'COMPONENT_SET' ? (comp.children && comp.children[0]) : comp;
-    if (root && 'children' in root && root.children && root.children.length > 1) {
+    if (root && 'children' in root && root.children && root.children.length > 1 && !isDrawing(root)) {
       if (root.layoutMode && root.layoutMode !== 'NONE') P(cLayout); else F(cLayout, nodeItem(comp, {}));
     }
   });
@@ -575,7 +587,7 @@ async function runAudit(scope) {
       } catch (e) {}
     }
     // auto-layout
-    if ((node.type === 'FRAME' || node.type === 'COMPONENT') && 'children' in node && node.children && node.children.length > 1 && !inInstance) {
+    if ((node.type === 'FRAME' || node.type === 'COMPONENT') && 'children' in node && node.children && node.children.length > 1 && !inInstance && !isDrawing(node)) {
       if (node.layoutMode && node.layoutMode !== 'NONE') P(lLayout); else F(lLayout, nodeItem(node, { count: node.children.length }));
     }
     // names

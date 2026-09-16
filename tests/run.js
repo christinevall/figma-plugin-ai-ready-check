@@ -159,6 +159,12 @@ function paintBound(hex, v) { return solid(hex, { boundVariables: { color: bound
     t('missing docs link flagged on set, present on Badge passes', check(r, 'components', 'docs-link').items.some(i => i.id === set.id) && !check(r, 'components', 'docs-link').items.some(i => i.id === badge.id));
     t('hidden layer inside a component is flagged', check(r, 'components', 'hidden').items.some(i => i.name === 'leftover'));
     t('component without auto-layout (2 children) is flagged', check(r, 'components', 'comp-layout').items.some(i => i.id === card.id));
+    const icon = add(f.page, node('COMPONENT', 'icon/alert-octagon', { layoutMode: 'NONE', description: 'Alert icon. Use in banners and toasts.' })); add(icon, node('VECTOR', 'Vector')); add(icon, node('VECTOR', 'Vector'));
+    const illo = add(f.page, node('FRAME', 'Illustration / Empty state', { layoutMode: 'NONE' })); add(illo, node('ELLIPSE', 'Ellipse 1')); add(illo, node('BOOLEAN_OPERATION', 'Union')); const g = add(illo, node('GROUP', 'Group 3')); add(g, node('VECTOR', 'Vector'));
+    f.select(set, badge, card, icon, illo);
+    const r2 = await audit(f);
+    t('icon component (only vectors inside) is not flagged for auto-layout', !check(r2, 'components', 'comp-layout').items.some(i => i.id === icon.id));
+    t('illustration frame (shapes and a group of vectors) is not flagged for auto-layout', !check(r2, 'layers', 'layout').items.some(i => i.id === illo.id));
   }
 
   // -------------------------------------------------------------------------
