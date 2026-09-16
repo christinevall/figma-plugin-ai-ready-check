@@ -146,6 +146,7 @@ function paintBound(hex, v) { return solid(hex, { boundVariables: { color: bound
     const f = fixture();
     const set = add(f.page, node('COMPONENT_SET', 'Input', { componentPropertyDefinitions: { 'Property 1': { type: 'VARIANT', variantOptions: ['Default', 'Variant2'] }, 'Boolean#2:1': { type: 'BOOLEAN' }, 'Has icon#2:2': { type: 'BOOLEAN' } }, description: '' }));
     const v = add(set, node('COMPONENT', 'Property 1=Default', { layoutMode: 'HORIZONTAL' })); add(v, node('TEXT', 'label')); add(v, node('RECTANGLE', 'leftover', { visible: false }));
+    const dismiss = add(v, node('FRAME', 'dismiss', { visible: false, componentPropertyReferences: { visible: 'onDismiss#3:1' } })); add(dismiss, node('INSTANCE', 'close icon', { visible: false }));
     const badge = add(f.page, node('COMPONENT', 'Badge', { description: 'Badge', layoutMode: 'HORIZONTAL', documentationLinks: [{ uri: 'https://example.com/badge' }] })); add(badge, node('TEXT', 'text')); add(badge, node('TEXT', 'count'));
     const card = add(f.page, node('COMPONENT', 'Card', { description: 'Card: groups one item. Use in lists and grids. Not for page sections.', layoutMode: 'NONE' })); add(card, node('TEXT', 'a')); add(card, node('TEXT', 'b'));
     f.select(set, badge, card);
@@ -158,6 +159,7 @@ function paintBound(hex, v) { return solid(hex, { boundVariables: { color: bound
     t('interactive component (Input) without a State axis is flagged', check(r, 'components', 'states').items.some(i => i.id === set.id));
     t('missing docs link flagged on set, present on Badge passes', check(r, 'components', 'docs-link').items.some(i => i.id === set.id) && !check(r, 'components', 'docs-link').items.some(i => i.id === badge.id));
     t('hidden layer inside a component is flagged', check(r, 'components', 'hidden').items.some(i => i.name === 'leftover'));
+    t('layer hidden by a boolean property (onDismiss) is not flagged', !check(r, 'components', 'hidden').items.some(i => i.name === 'dismiss' || i.name === 'close icon'));
     t('component without auto-layout (2 children) is flagged', check(r, 'components', 'comp-layout').items.some(i => i.id === card.id));
     const icon = add(f.page, node('COMPONENT', 'icon/alert-octagon', { layoutMode: 'NONE', description: 'Alert icon. Use in banners and toasts.' })); add(icon, node('VECTOR', 'Vector')); add(icon, node('VECTOR', 'Vector'));
     const illo = add(f.page, node('FRAME', 'Illustration / Empty state', { layoutMode: 'NONE' })); add(illo, node('ELLIPSE', 'Ellipse 1')); add(illo, node('BOOLEAN_OPERATION', 'Union')); const g = add(illo, node('GROUP', 'Group 3')); add(g, node('VECTOR', 'Vector'));

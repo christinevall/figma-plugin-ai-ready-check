@@ -447,7 +447,7 @@ async function runAudit(scope) {
     'A documentation link on the component points straight at the page that explains the rules, in Storybook, Zeroheight or a wiki. An agent that can follow links gets the full story, not the summary.',
     'Add the link under the component description in the right panel, or paste it here.', { unit: 'component', caveat: 'This only checks that a link exists, not that it points to the right page.' });
   var cHidden = mkCheck('hidden', 'No hidden layers inside components', 'info',
-    'Hidden layers are still in the file. An agent reading the structure sees them and may build them. If a layer is a leftover, delete it. If it is a real option, make it a boolean property instead.',
+    'Hidden layers are still in the file. An agent reading the structure sees them and may build them. If a layer is a leftover, delete it. If it is a real option, make it a boolean property instead. Layers whose visibility is bound to a boolean property are fine and are not counted here.',
     'Delete leftover hidden layers, or turn optional parts into a boolean property.', { unit: 'layer' });
   var cLayout = mkCheck('comp-layout', 'Components use auto-layout', 'warn',
     'Auto-layout is how an agent reads direction, spacing and how things resize. A component with absolutely placed children is a picture, not a layout. Icons and illustrations, where every child is a shape or a path, are left out: there is nothing to arrange.',
@@ -477,8 +477,12 @@ async function runAudit(scope) {
   });
   all.forEach(function (n) {
     if (n.visible === false && n.type !== 'PAGE' && (hasAncestorOfType(n, 'COMPONENT') || hasAncestorOfType(n, 'COMPONENT_SET'))) {
-      // only flag the topmost hidden node
-      if (!(n.parent && n.parent.visible === false)) F(cHidden, nodeItem(n, {}));
+      // only the topmost hidden node
+      if (n.parent && n.parent.visible === false) return;
+      // hidden because a boolean property switches it off: that is the recommended pattern, not a leftover
+      var refs = null; try { refs = n.componentPropertyReferences; } catch (e) {}
+      if (refs && refs.visible) { P(cHidden); return; }
+      F(cHidden, nodeItem(n, {}));
     }
   });
   if (cHidden.total === 0 && components.length) { cHidden.pass = 1; cHidden.total = 1; }
