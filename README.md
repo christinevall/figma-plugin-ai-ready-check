@@ -27,6 +27,8 @@ Runs entirely on your machine. No AI, no account, no network. It only writes to 
 
 Try it on a copy of your file first. The checks are heuristics, not a verdict, and this is a beta.
 
+**Where to run it:** on your design system file, the library where your variables, styles and components live. That is where the fixes belong. On product files it still checks that layers use the library's tokens, but scopes, code names and descriptions are set in the library.
+
 ## Safety, privacy and liability
 
 **What it can and cannot do to your file.** The plugin cannot reach the internet, so nothing you have can leave your computer: no server, no analytics, no AI service. It only ever changes your file when you click a button, and every change is one Cmd+Z. It never deletes anything. Your team library is read, never written. The one thing it stores is the checklist, as plugin data in your own file.

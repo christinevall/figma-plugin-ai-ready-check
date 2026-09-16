@@ -37,6 +37,10 @@
 
   .beta { display: inline-flex; align-items: center; border: 1px solid #f1d9a6; background: #fff7e6; color: #8a5a00; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; cursor: pointer; }
   .beta:hover, .beta[aria-expanded="true"] { background: #8a5a00; color: #fff; border-color: #8a5a00; }
+  /* tip box: stands out from the beta banner */
+  .tip { display: flex; gap: 10px; align-items: flex-start; background: var(--ink); color: var(--paper); border-radius: 10px; padding: 11px 13px; margin: 12px 0 4px; font-size: 12px; line-height: 1.5; }
+  .tip .lbl { flex: none; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 3px; }
+  .tip b { font-weight: 600; color: #fff; }
   /* warning banner */
   .warn-banner { display: none; margin: 10px 0 0; padding: 9px 12px; border: 1px solid #f1d9a6; background: #fff7e6; border-radius: 9px; font-size: 11.5px; line-height: 1.45; color: #5a4300; gap: 10px; align-items: flex-start; }
   .warn-banner.show { display: flex; }
@@ -248,6 +252,7 @@
 
   <div class="scroll" id="scroll">
     <div class="panel show" id="panel-intro">
+      <div class="tip" role="note"><span class="lbl">Tip</span><span><b>Run it on your design system file.</b> The library where your variables, styles and components live is where the fixes belong. On product files it still checks that layers use the library’s tokens, but scopes, code names and descriptions are set in the library.</span></div>
       <p class="hero"><b>What this does.</b> An AI agent that reads your Figma file (through Figma's MCP server, or Dev Mode) sees exactly what is in the file, not what is in your head. This plugin reads the file the same way, shows where the context is thin, and helps you fix it in place.
       <ol>
         <li><b>Variables</b>: primitives and semantics, scopes, code names.</li>
@@ -277,7 +282,7 @@
   // ---------------------------------------------------------------------------
   // State and helpers
   // ---------------------------------------------------------------------------
-  var VERSION = '0.9.8 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
+  var VERSION = '0.9.9 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
   var FEEDBACK_EMAIL = 'hello@moonlearning.io'; // beta feedback address; shown in the banner and in the report
   var state = { scope: 'selection', result: null, step: 0, checklist: {}, done: {}, sel: null, pending: {}, expanded: {} };
   var STEPS = ['overview', 'variables', 'styles', 'components', 'layers', 'checklist', 'report'];
