@@ -38,11 +38,13 @@
   .beta { display: inline-flex; align-items: center; border: 1px solid #f1d9a6; background: #fff7e6; color: #8a5a00; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; cursor: pointer; }
   .beta:hover, .beta[aria-expanded="true"] { background: #8a5a00; color: #fff; border-color: #8a5a00; }
   /* stations on the start screen */
-  .stations { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-  .stn { display: flex; gap: 9px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 11px; }
-  .stn .n { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); color: var(--muted); font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-  .stn b { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink); }
-  .stn span:not(.n) { display: block; font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .stations { display: flex; flex-direction: column; gap: 0; margin: 6px 0 4px; }
+  .stn { display: flex; gap: 10px; align-items: baseline; padding: 6px 2px; border-top: 1px solid var(--line-2); }
+  .stn:first-child { border-top: 0; }
+  .stn .n { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; align-self: center; }
+  .stn div { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
+  .stn b { font-size: 12.5px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .stn span:not(.n) { font-size: 11px; color: var(--muted); }
   .stepper.idle button { pointer-events: none; }
   .stepper.idle button .num { border-color: var(--line); color: var(--muted); }
   .stepper.idle button[aria-current="step"] .num { background: var(--card); color: var(--muted); }
@@ -292,7 +294,7 @@
   // ---------------------------------------------------------------------------
   // State and helpers
   // ---------------------------------------------------------------------------
-  var VERSION = '0.9.10 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
+  var VERSION = '0.9.11 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
   var FEEDBACK_EMAIL = 'hello@moonlearning.io'; // beta feedback address; shown in the banner and in the report
   var state = { scope: 'selection', result: null, step: 0, checklist: {}, done: {}, sel: null, pending: {}, expanded: {} };
   var STEPS = ['overview', 'variables', 'styles', 'components', 'layers', 'checklist', 'report'];
