@@ -71,6 +71,8 @@ While iterating, turn on **Plugins → Development → Hot reload plugin** once.
 
 **In plain words:** the plugin cannot reach the internet, so nothing you have can leave your computer. It only ever changes your file when you click a button, and it double-checks every click before acting on it, so a broken or odd input cannot damage the file. Anything it shows you from your file is treated as text, never as code, so a strangely named layer cannot do anything inside the panel. The one thing it remembers is the checklist, and that is stored in your own file, visible to you. Your team library is read, never written.
 
+**Working with confidential files?** You can use it. The plugin reads only what Figma already shows you, and sends nothing anywhere: no server, no analytics, no AI service. If your company reviews plugins before use, this repository is the full source, so your security team can read exactly what it does. And as with any plugin, if your organisation's policy says no third-party plugins, that policy wins.
+
 ## Legal and privacy
 
 - **Licence:** see `LICENSE.txt`. Copyright Christine Vallaure. Free to use, not to redistribute, provided as is without warranty. Switch to MIT if you want the code reusable; the MIT warranty disclaimer gives the same liability protection.
