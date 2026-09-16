@@ -2,6 +2,8 @@
 
 A free Figma plugin that checks and fixes your Figma file for AI agents, MCP and dev handoff, step by step. For designers who do not have access to the codebase and want to get the file in order anyway.
 
+![AI Ready Check](docs/cover.png)
+
 It walks you through six stations:
 
 1. **Variables**: primitives and semantics, scopes, code names.
