@@ -37,6 +37,16 @@
 
   .beta { display: inline-flex; align-items: center; border: 1px solid #f1d9a6; background: #fff7e6; color: #8a5a00; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; cursor: pointer; }
   .beta:hover, .beta[aria-expanded="true"] { background: #8a5a00; color: #fff; border-color: #8a5a00; }
+  /* stations on the start screen */
+  .stations { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .stn { display: flex; gap: 9px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 11px; }
+  .stn .n { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); color: var(--muted); font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .stn b { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .stn span:not(.n) { display: block; font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .stepper.idle button { pointer-events: none; }
+  .stepper.idle button .num { border-color: var(--line); color: var(--muted); }
+  .stepper.idle button[aria-current="step"] .num { background: var(--card); color: var(--muted); }
+  .stepper.idle button[aria-current="step"] { border-bottom-color: transparent; color: var(--muted); }
   /* tip box: stands out from the beta banner */
   .tip { display: flex; gap: 10px; align-items: flex-start; background: var(--ink); color: var(--paper); border-radius: 10px; padding: 11px 13px; margin: 12px 0 4px; font-size: 12px; line-height: 1.5; }
   .tip .lbl { flex: none; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 3px; }
@@ -237,7 +247,7 @@
       <div><h1>AI Ready Check <button type="button" class="beta" id="beta-pill" aria-expanded="false" aria-controls="warn" title="About the beta">Beta</button></h1><p>Check and fix your Figma file for AI agents, MCP and dev handoff</p>
         <p class="byml">by Christine Vallaure · <a class="ext" href="#" data-extlink="https://moonlearning.io">moonlearning.io</a></p></div>
     </div>
-    <div class="warn-banner" id="warn" role="note"><span class="txt"><b>This is a beta.</b> Try it on a copy of your file first. Every fix is one click and one Cmd+Z, but “Apply to all” changes many things at once. The checks are heuristics, not a verdict, and some may be wrong. Checks, names and wording can still change before the Community release; your checklist ticks stay in the file. Wrong result, a bug, or an idea? Mail <span id="feedback-mail" style="font-weight:600"></span> <button type="button" id="feedback-copy" style="margin-left:2px">copy</button></span><button type="button" id="warn-ok">Got it</button></div>
+    <div class="warn-banner" id="warn" role="note"><span class="txt"><b>This is a beta.</b> Try it on a copy of your file first. Every fix is one click and one Cmd+Z. Wrong result, a bug, or an idea? Mail <span id="feedback-mail" style="font-weight:600"></span> <button type="button" id="feedback-copy" style="margin-left:2px">copy</button></span><button type="button" id="warn-ok">Got it</button></div>
     <div class="runrow">
       <div class="scope" role="group" aria-label="Check scope">
         <button data-scope="selection" aria-pressed="true">Selection</button>
@@ -252,17 +262,17 @@
 
   <div class="scroll" id="scroll">
     <div class="panel show" id="panel-intro">
-      <div class="tip" role="note"><span class="lbl">Tip</span><span><b>Run it on your design system file.</b> The library where your variables, styles and components live is where the fixes belong. On product files it still checks that layers use the library’s tokens, but scopes, code names and descriptions are set in the library.</span></div>
-      <p class="hero"><b>What this does.</b> An AI agent that reads your Figma file (through Figma's MCP server, or Dev Mode) sees exactly what is in the file, not what is in your head. This plugin reads the file the same way, shows where the context is thin, and helps you fix it in place.
-      <ol>
-        <li><b>Variables</b>: primitives and semantics, scopes, code names.</li>
-        <li><b>Styles</b>: a named type scale.</li>
-        <li><b>Components</b>: descriptions, properties, states.</li>
-        <li><b>Layers</b>: tokens applied, auto-layout, names.</li>
-        <li><b>Checklist</b>: what only a person can check.</li>
-        <li><b>Report</b>: a summary to share with your team.</li>
-      </ol>
-      <br>Pick a scope and run the check. Everything runs on your machine. No AI, no account, nothing leaves the file, and it only writes when you click Apply.</p><div class="warn-banner show" style="margin-top:14px" role="note"><span class="txt"><b>Results are heuristics:</b> review each suggestion before you apply it. Every change can be undone with Cmd+Z. Work on a copy if the file matters. Provided as is, without warranty.</span></div>
+      <div class="tip" role="note"><span class="lbl">Tip</span><span><b>Run it on your design system file</b>, where variables, styles and components live. Product files are checked too, but the fixes belong in the library.</span></div>
+      <p class="hero" style="padding:10px 0 2px">An AI agent reads only what is in the file. This plugin reads it the same way and helps you fix what is thin, in six stations.</p>
+      <div class="stations">
+        <div class="stn"><span class="n">1</span><div><b>Variables</b><span>Primitives, semantics, scopes, code names</span></div></div>
+        <div class="stn"><span class="n">2</span><div><b>Styles</b><span>A named type scale</span></div></div>
+        <div class="stn"><span class="n">3</span><div><b>Components</b><span>Descriptions, properties, states</span></div></div>
+        <div class="stn"><span class="n">4</span><div><b>Layers</b><span>Tokens applied, auto-layout, names</span></div></div>
+        <div class="stn"><span class="n">5</span><div><b>Checklist</b><span>What only a person can check</span></div></div>
+        <div class="stn"><span class="n">6</span><div><b>Report</b><span>A summary for your developers</span></div></div>
+      </div>
+      <div class="warn-banner show" style="margin-top:12px" role="note"><span class="txt"><b>Results are heuristics.</b> Review before you apply. Cmd+Z undoes. Work on a copy if the file matters. Provided as is, without warranty.</span></div>
     </div>
     <div class="panel" id="panel-step" role="tabpanel"></div>
   </div>
@@ -282,7 +292,7 @@
   // ---------------------------------------------------------------------------
   // State and helpers
   // ---------------------------------------------------------------------------
-  var VERSION = '0.9.9 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
+  var VERSION = '0.9.10 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
   var FEEDBACK_EMAIL = 'hello@moonlearning.io'; // beta feedback address; shown in the banner and in the report
   var state = { scope: 'selection', result: null, step: 0, checklist: {}, done: {}, sel: null, pending: {}, expanded: {} };
   var STEPS = ['overview', 'variables', 'styles', 'components', 'layers', 'checklist', 'report'];
@@ -479,7 +489,7 @@
       h += '<button role="tab" data-step="' + i + '" aria-current="' + (state.step === i ? 'step' : 'false') + '" title="' + STEP_LABELS[k] + '"><span class="num ' + cls + '">' + (i === 0 ? '○' : i) + '</span><span class="lbl">' + STEP_LABELS[k] + '</span></button>';
     });
     el.innerHTML = h;
-    el.classList.toggle('show', !!state.result);
+    el.classList.add('show'); el.classList.toggle('idle', !state.result);
   }
   function renderNav() {
     var nav = $('nav'); nav.classList.toggle('show', !!state.result);
