@@ -124,7 +124,7 @@ function paintBound(hex, v) { return solid(hex, { boundVariables: { color: bound
     const f = fixture();
     const card = add(f.page, node('FRAME', 'Card', { layoutMode: 'VERTICAL', paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 16, itemSpacing: 12, cornerRadius: 8 }));
     const boundCard = add(card, node('FRAME', 'Card / Header', { layoutMode: 'HORIZONTAL', paddingLeft: 16, paddingRight: 16, paddingTop: 0, paddingBottom: 0, itemSpacing: 0, cornerRadius: 8, boundVariables: { paddingLeft: bound(f.vars.inset), paddingRight: bound(f.vars.inset), topLeftRadius: bound(f.vars.rad) } }));
-    const loose = add(card, node('FRAME', 'Frame 12', { layoutMode: 'NONE' })); add(loose, node('RECTANGLE', 'Rectangle 4')); add(loose, node('ELLIPSE', 'Ellipse 2'));
+    const loose = add(card, node('FRAME', 'Frame 12', { layoutMode: 'NONE' })); add(loose, node('TEXT', 'Title')); add(loose, node('RECTANGLE', 'Rectangle 4')); add(loose, node('ELLIPSE', 'Ellipse 2'));
     const single = add(card, node('FRAME', 'Wrapper', { layoutMode: 'NONE' })); add(single, node('RECTANGLE', 'Image'));
     f.select(card);
     const r = await audit(f);
@@ -134,7 +134,7 @@ function paintBound(hex, v) { return solid(hex, { boundVariables: { color: bound
     t('raw padding 16 and gap 12 are flagged', sp.items.some(i => i.id === card.id));
     t('padding 16 offers space/inset/md, gap 12 offers nothing', (() => { const it = sp.items.find(i => i.id === card.id); const p = it.fields.find(x => x.field === 'paddingLeft'), g = it.fields.find(x => x.field === 'itemSpacing'); return p.candidates.some(x => x.id === f.vars.inset.id) && g.candidates.length === 0; })());
     t('fully bound spacing passes', !sp.items.some(i => i.id === boundCard.id));
-    t('frame with 2 children and no auto-layout is flagged', lay.items.some(i => i.id === loose.id));
+    t('frame with text and shapes and no auto-layout is flagged', lay.items.some(i => i.id === loose.id));
     t('frame with 1 child is not flagged for layout', !lay.items.some(i => i.id === single.id));
     t('default names Frame 12, Rectangle 4, Ellipse 2 are flagged', ['Frame 12', 'Rectangle 4', 'Ellipse 2'].every(n => names(nm).indexOf(n) >= 0), JSON.stringify(names(nm)));
     t('"Card / Header" and "Wrapper" are not flagged', !names(nm).some(n => n === 'Card / Header' || n === 'Wrapper'));
