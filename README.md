@@ -47,6 +47,6 @@ Wrong result, a bug, or an idea? Mail **hello@moonlearning.io**. A screenshot of
 
 ## Licence
 
-Free to use, not to redistribute, provided as is without warranty. See [LICENSE](LICENSE). Not affiliated with Figma.
+Free to use, not to redistribute, provided as is without warranty. See [LICENSE](LICENSE). Legal notice (Impressum) and privacy policy: [moonlearning.io/terms-conditions](https://www.moonlearning.io/terms-conditions). Not affiliated with Figma.
 
 Made by [Christine Vallaure](https://christinevallaure.com), [moonlearning.io](https://moonlearning.io).

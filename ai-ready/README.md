@@ -75,10 +75,10 @@ While iterating, turn on **Plugins → Development → Hot reload plugin** once.
 
 ## Legal and privacy
 
-- **Licence:** see `LICENSE.txt`. Copyright Christine Vallaure. Free to use, not to redistribute, provided as is without warranty. Switch to MIT if you want the code reusable; the MIT warranty disclaimer gives the same liability protection.
-- **Disclaimer in the product:** the start screen says results are heuristics, every change is undoable with Cmd+Z, work on a copy if the file matters, provided as is. Same wording in the listing.
-- **Personal data (GDPR):** the plugin processes no personal data on the author's side. The only personal datum it touches is the current user's Figma display name, which it stores as plugin data inside the user's own file to show who ticked a checklist item. That data stays in the customer's file, in Figma's infrastructure, under the customer's existing Figma terms; the author never receives it, so the author is not a controller. The checklist screen says so in plain words. No cookies, no analytics, no network.
-- **Impressum:** the listing links to moonlearning.io, which carries the Impressum and contact details required for an EU-based publisher. Support contact in the listing is the same address.
-- **Figma:** publishing accepts Figma's Creator Agreement and Community terms. The plugin uses only the official Plugin API, no proposed APIs. Not affiliated with or endorsed by Figma, Inc.
+- **Licence:** see `LICENSE.txt`. Copyright Christine Vallaure. Free to use, not to redistribute, provided as is without warranty.
+- **Disclaimer:** the start screen of the plugin says it plainly: results are heuristics, every change is undoable with Cmd+Z, work on a copy if the file matters, provided as is. The same applies to this repository.
+- **Personal data:** the plugin processes no personal data on the author's side. The only personal datum it touches is your Figma display name, which it stores as plugin data inside your own file to show who ticked a checklist item. That data stays in your file, under your own Figma terms; the author never receives it. No cookies, no analytics, no network.
+- **Legal notice (Impressum) and privacy policy:** [moonlearning.io/terms-conditions](https://www.moonlearning.io/terms-conditions).
+- **Figma:** the plugin uses only the official Plugin API. Not affiliated with or endorsed by Figma, Inc. Figma is a trademark of Figma, Inc.
 
 Made by [Christine Vallaure](https://christinevallaure.com), [moonlearning.io](https://moonlearning.io). Not affiliated with Figma.
