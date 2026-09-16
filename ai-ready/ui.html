@@ -287,7 +287,7 @@
   // ---------------------------------------------------------------------------
   // State and helpers
   // ---------------------------------------------------------------------------
-  var VERSION = '0.9.14 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
+  var VERSION = '0.9.15 · 2026-09-16'; // bump on every change, so testers and reports say which build ran
   var FEEDBACK_EMAIL = 'hello@moonlearning.io'; // beta feedback address; shown in the banner and in the report
   var state = { scope: 'selection', result: null, step: 0, checklist: {}, done: {}, sel: null, pending: {}, expanded: {} };
   var STEPS = ['overview', 'variables', 'styles', 'components', 'layers', 'checklist', 'report'];
@@ -569,7 +569,7 @@
     if (c.key === 'hide-primitives') {
       var cols = {}; open.forEach(function (it) { if (!cols[it.collectionId]) cols[it.collectionId] = { name: it.collection, n: 0 }; cols[it.collectionId].n++; });
       var h = '<div class="batch">'; Object.keys(cols).forEach(function (id) { h += '<button class="btn primary" data-act="hide-collection" data-col="' + esc(id) + '" data-check="' + c.key + '">Hide all ' + cols[id].n + ' in “' + esc(cols[id].name) + '”</button>'; });
-      return h + '<span class="hint">Reversible: select the variables and untick "Hide from publishing".</span></div>';
+      return h + '<span class="hint">Reversible: select the variables and untick "Hide from publishing". Hide only collections that layers never use directly. Spacing or size primitives are often bound straight to layers in product files; hiding them keeps existing bindings but removes them from the picker, so add semantic tokens for those first.</span></div>';
     }
     return '';
   }
@@ -587,7 +587,7 @@
       if (c.key === 'scopes') r2 = (it.suggest || []).map(function (s) { return '<span class="tagchip">' + esc(SCOPE_LABEL[s] || s) + '</span>'; }).join('') + '<span style="flex:1"></span><button class="btn" data-act="set-scopes" data-token="' + t + '">' + (done ? 'Done ✓' : 'Apply') + '</button>';
       else if (c.key === 'code-syntax') r2 = '<input type="text" class="syn" value="' + esc(it.suggest) + '" aria-label="Code name" spellcheck="false"><button class="btn" data-act="set-syntax" data-token="' + t + '">' + (done ? 'Done ✓' : 'Apply') + '</button>';
       else if (c.key === 'var-desc') r2 = '<input type="text" class="vd" placeholder="What it is for. Not for what." aria-label="Description"><button class="btn quiet" data-act="draft-var-desc" data-token="' + t + '" title="Write a draft from the name">Draft</button><button class="btn" data-act="set-var-desc" data-token="' + t + '">' + (done ? 'Done ✓' : 'Apply') + '</button>';
-      else if (c.key === 'hide-primitives') r2 = '<span class="hint">Shown in the published library</span><span style="flex:1"></span><button class="btn" data-act="set-hidden" data-token="' + t + '">' + (done ? 'Hidden ✓' : 'Hide') + '</button>';
+      else if (c.key === 'hide-primitives') r2 = '<span class="hint">Not hidden yet · visible to files using the library</span><span style="flex:1"></span><button class="btn" data-act="set-hidden" data-token="' + t + '">' + (done ? 'Hidden ✓' : 'Hide') + '</button>';
       else if (c.key === 'semantic-naming') r2 = '<input type="text" class="vn" value="' + esc(it.name) + '" aria-label="New name" spellcheck="false"><button class="btn" data-act="rename-variable" data-token="' + t + '">' + (done ? 'Done ✓' : 'Rename') + '</button>';
       else r2 = '<span class="hint">' + esc(it.note || '') + '</span>';
     } else if (it.kind === 'collection') {
