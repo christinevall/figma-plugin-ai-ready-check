@@ -13,7 +13,8 @@ var DEFAULT_NAME = /^(Frame|Group|Rectangle|Ellipse|Vector|Line|Polygon|Star|Uni
 var DEFAULT_PROP = /^(Property\s*\d*|Boolean\s*\d*|Instance\s*\d*|Variant\s*\d+|Text\s*\d+)$/i; // only Figma's auto-generated names; bare "variant" or "text" can be real prop names
 var DEFAULT_VALUE = /^Variant\s*\d+$/i;
 var DEFAULT_MODE = /^(Mode|Value)\s*\d*$/i;
-var HUE_WORD = /(^|[\/\-_ .])(blue|red|green|gray|grey|neutral|orange|yellow|purple|pink|teal|slate|zinc|stone|amber|lime|emerald|cyan|sky|indigo|violet|fuchsia|rose|brown|magenta)([\/\-_ .]|$)/i;
+// Hue words only. "neutral" is a role in semantic naming (like brand or danger), so it is not in this list.
+var HUE_WORD = /(^|[\/\-_ .])(blue|red|green|gray|grey|orange|yellow|purple|pink|teal|slate|zinc|stone|amber|lime|emerald|cyan|sky|indigo|violet|fuchsia|rose|brown|magenta)([\/\-_ .]|$)/i;
 var STEP_NUMBER = /(^|[\/\-_ .])\d{2,4}$/;
 var INTERACTIVE = /button|btn|cta|input|field|textbox|checkbox|radio|toggle|switch|select|dropdown|combobox|tab|link|chip|slider|menu|item|accordion|pagination|stepper/i;
 var STATE_AXIS = /state|status|interaction/i;
@@ -143,9 +144,14 @@ function suggestSyntax(v) {
   if ((v.type || v.resolvedType) === 'COLOR' && !/^colou?r/.test(k)) k = 'color-' + k;
   return '--' + k;
 }
-function looksPrimitiveName(name) {
-  return STEP_NUMBER.test(name) || HUE_WORD.test(name) || /#[0-9a-f]{3,8}/i.test(name);
+// Returns the reason a semantic name reads like a raw value, or '' when it is fine.
+function primitiveNameReason(name) {
+  var hue = HUE_WORD.exec(name); if (hue) return 'contains the hue "' + hue[2] + '"';
+  var step = STEP_NUMBER.exec(name); if (step) return 'ends in a scale step (' + step[0].replace(/^[\/\-_ .]/, '') + ')';
+  if (/#[0-9a-f]{3,8}/i.test(name)) return 'contains a hex value';
+  return '';
 }
+function looksPrimitiveName(name) { return primitiveNameReason(name) !== ''; }
 function nameStyle(name) {
   var last = String(name).split('/').pop();
   if (/\s/.test(last)) return 'spaces';
@@ -377,7 +383,8 @@ async function runAudit(scope) {
     var v = V.info[id]; if (v.remote) return; // library tokens are checked in the library file, not here
     var st = nameStyle(v.name); styleCounts[st] = (styleCounts[st] || 0) + 1; styleTotal++;
     if (v.semantic && v.type === 'COLOR') {
-      if (looksPrimitiveName(v.name)) F(vNaming, varItem(v, { note: 'Reads like a raw value' })); else P(vNaming);
+      var why = primitiveNameReason(v.name);
+      if (why) F(vNaming, varItem(v, { note: 'Flagged because the name ' + why + '. Name the use instead.' })); else P(vNaming);
     }
     if (v.type !== 'BOOLEAN') {
       if (v.semantic || noSemantics) {

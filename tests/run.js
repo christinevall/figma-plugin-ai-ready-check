@@ -197,6 +197,20 @@ function paintBound(hex, v) { return solid(hex, { boundVariables: { color: bound
   }
   {
     const f = new File();
+    const prim = f.collection('Primitives'); const sem = f.collection('Semantic');
+    const n1 = f.variable(prim, 'color/neutral/100', 'COLOR', '#F2F2F2', { hidden: true });
+    const ok1 = f.variable(sem, 'color/background/neutral/default', 'COLOR', { alias: n1 }, { scopes: ['FRAME_FILL'] });
+    const ok2 = f.variable(sem, 'color/background/neutral/secondary-hover', 'COLOR', { alias: n1 }, { scopes: ['FRAME_FILL'] });
+    const bad1 = f.variable(sem, 'color/background/blue/default', 'COLOR', { alias: n1 }, { scopes: ['FRAME_FILL'] });
+    const bad2 = f.variable(sem, 'color/background/brand-500', 'COLOR', { alias: n1 }, { scopes: ['FRAME_FILL'] });
+    add(f.page, node('FRAME', 'x')); f.select(f.page.children[0]);
+    const r = await audit(f); const nm = check(r, 'variables', 'semantic-naming');
+    t('"neutral" is a role, not a hue: color/background/neutral/default is not flagged', !nm.items.some(i => i.id === ok1.id || i.id === ok2.id), JSON.stringify(names(nm)));
+    t('a hue in a semantic name is flagged, and the row says which', nm.items.some(i => i.id === bad1.id && /blue/.test(i.note)));
+    t('a scale step in a semantic name is flagged, and the row says which', nm.items.some(i => i.id === bad2.id && /500/.test(i.note)));
+  }
+  {
+    const f = new File();
     const col = f.collection('Colors', ['Mode 1', 'Mode 2']);
     const a = f.variable(col, 'blue/500', 'COLOR', ['#2F6BFF', '#2F6BFF']);
     const b = f.variable(col, 'bg/primary', 'COLOR', [{ alias: a }, { alias: a }]);
